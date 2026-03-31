@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 240 15% 5%;
+    --foreground: 120 20% 82%;
+    --card: 260 15% 9%;
+    --card-foreground: 120 20% 82%;
+    --popover: 250 15% 8%;
+    --popover-foreground: 120 20% 82%;
+    --primary: 130 45% 38%;
+    --primary-foreground: 120 20% 92%;
+    --secondary: 270 20% 12%;
+    --secondary-foreground: 120 20% 75%;
+    --muted: 260 15% 14%;
+    --muted-foreground: 120 10% 50%;
+    --accent: 270 55% 55%;
+    --accent-foreground: 120 20% 92%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 260 20% 18%;
+    --input: 260 20% 18%;
+    --ring: 130 45% 38%;
+    --chart-1: 130 45% 38%;
+    --chart-2: 270 55% 55%;
+    --chart-3: 150 30% 40%;
+    --chart-4: 290 40% 50%;
+    --chart-5: 110 35% 55%;
+    --radius: 0.5rem;
+    --sidebar-background: 240 15% 5%;
+    --sidebar-foreground: 120 20% 82%;
+    --sidebar-primary: 130 45% 38%;
+    --sidebar-primary-foreground: 120 20% 92%;
+    --sidebar-accent: 270 20% 12%;
+    --sidebar-accent-foreground: 120 20% 75%;
+    --sidebar-border: 260 20% 18%;
+    --sidebar-ring: 130 45% 38%;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  .dark {
+    --background: 240 15% 5%;
+    --foreground: 120 20% 82%;
+    --card: 260 15% 9%;
+    --card-foreground: 120 20% 82%;
+    --popover: 250 15% 8%;
+    --popover-foreground: 120 20% 82%;
+    --primary: 130 45% 38%;
+    --primary-foreground: 120 20% 92%;
+    --secondary: 270 20% 12%;
+    --secondary-foreground: 120 20% 75%;
+    --muted: 260 15% 14%;
+    --muted-foreground: 120 10% 50%;
+    --accent: 270 55% 55%;
+    --accent-foreground: 120 20% 92%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 260 20% 18%;
+    --input: 260 20% 18%;
+    --ring: 130 45% 38%;
+    --sidebar-background: 240 15% 5%;
+    --sidebar-foreground: 120 20% 82%;
+    --sidebar-primary: 130 45% 38%;
+    --sidebar-primary-foreground: 120 20% 92%;
+    --sidebar-accent: 270 20% 12%;
+    --sidebar-accent-foreground: 120 20% 75%;
+    --sidebar-border: 260 20% 18%;
+    --sidebar-ring: 130 45% 38%;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-mono);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(0 0% 4%);
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 20%);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(130 45% 38%);
+}
+
+/* Scanner animation */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+.scanner-line {
+  animation: scan 8s linear infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Smoke drift animation */
+@keyframes smoke-drift-1 {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  15%  { opacity: 0.06; }
+  85%  { opacity: 0.04; }
+  100% { transform: translate(-80px, -300px) scale(2.5); opacity: 0; }
+}
+@keyframes smoke-drift-2 {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  15%  { opacity: 0.05; }
+  85%  { opacity: 0.03; }
+  100% { transform: translate(60px, -280px) scale(2.2); opacity: 0; }
+}
+@keyframes smoke-drift-3 {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+  20%  { opacity: 0.07; }
+  80%  { opacity: 0.03; }
+  100% { transform: translate(-40px, -320px) scale(3); opacity: 0; }
+}
+.smoke-1 { animation: smoke-drift-1 12s ease-out infinite; }
+.smoke-2 { animation: smoke-drift-2 16s ease-out infinite 4s; }
+.smoke-3 { animation: smoke-drift-3 20s ease-out infinite 8s; }
+
+/* Scissors snip animation */
+@keyframes scissors-snip {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-25deg) scale(1.2); }
+  40%  { transform: rotate(10deg) scale(1.1); }
+  60%  { transform: rotate(-15deg) scale(1.15); }
+  80%  { transform: rotate(5deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.scissors-snip {
+  animation: scissors-snip 0.5s ease-in-out;
+}
