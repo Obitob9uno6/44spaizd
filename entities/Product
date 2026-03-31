@@ -1,0 +1,107 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Product Name"
+    },
+    "slug": {
+      "type": "string",
+      "title": "URL Slug"
+    },
+    "price": {
+      "type": "number",
+      "title": "Price"
+    },
+    "compare_price": {
+      "type": "number",
+      "title": "Compare At Price"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category",
+      "enum": [
+        "tees",
+        "hoodies",
+        "pants",
+        "outerwear",
+        "headwear",
+        "accessories"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "materials": {
+      "type": "string",
+      "title": "Materials"
+    },
+    "weight": {
+      "type": "string",
+      "title": "Fabric Weight"
+    },
+    "sizes": {
+      "type": "array",
+      "title": "Available Sizes",
+      "items": {
+        "type": "string",
+        "enum": [
+          "XS",
+          "S",
+          "M",
+          "L",
+          "XL",
+          "XXL",
+          "ONE SIZE"
+        ]
+      }
+    },
+    "images": {
+      "type": "array",
+      "title": "Product Images",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "stock": {
+      "type": "number",
+      "title": "Stock Quantity"
+    },
+    "badge": {
+      "type": "string",
+      "title": "Badge",
+      "enum": [
+        "",
+        "NEW",
+        "LIMITED",
+        "SOLD OUT",
+        "POPULAR"
+      ]
+    },
+    "featured": {
+      "type": "boolean",
+      "title": "Featured"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Active"
+    },
+    "sku": {
+      "type": "string",
+      "title": "SKU"
+    },
+    "origin": {
+      "type": "string",
+      "title": "Origin Country"
+    }
+  },
+  "required": [
+    "name",
+    "price",
+    "category",
+    "images"
+  ]
+}
