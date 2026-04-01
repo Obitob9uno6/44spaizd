@@ -41,3 +41,8 @@ externalPort = 80
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+JWT_SECRET = "spaizd-jwt-j1vj1y2oqfb-1775019842166"

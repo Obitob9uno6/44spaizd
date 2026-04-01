@@ -3,11 +3,13 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import jwt from 'jsonwebtoken';
 import pool from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || 'spaizd-secret-key-change-in-production';
 
 app.use(cors());
 app.use(express.json());
@@ -34,11 +36,109 @@ const upload = multer({
   },
 });
 
+// Auth middleware
+function authMiddleware(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized' });
+  const token = authHeader.slice(7);
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
 // ── Image Upload ──────────────────────────────────────────
 app.post('/api/upload', upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const url = `/uploads/${req.file.filename}`;
   res.json({ url });
+});
+
+// ── Google Auth ───────────────────────────────────────────
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+    if (!credential) return res.status(400).json({ error: 'Missing credential' });
+
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+    if (!GOOGLE_CLIENT_ID) {
+      return res.status(503).json({ error: 'Google auth not configured' });
+    }
+
+    const { OAuth2Client } = await import('google-auth-library');
+    const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture: avatar } = payload;
+
+    // Find or create user
+    let result = await pool.query('SELECT * FROM users WHERE google_id = $1', [googleId]);
+    let user;
+    if (result.rows.length === 0) {
+      const insert = await pool.query(
+        `INSERT INTO users (google_id, email, name, avatar, provider)
+         VALUES ($1, $2, $3, $4, 'google')
+         ON CONFLICT (email) DO UPDATE SET google_id=$1, name=$3, avatar=$4, updated_date=NOW()
+         RETURNING *`,
+        [googleId, email, name, avatar]
+      );
+      user = insert.rows[0];
+    } else {
+      user = result.rows[0];
+      await pool.query('UPDATE users SET name=$1, avatar=$2, updated_date=NOW() WHERE id=$3', [name, avatar, user.id]);
+      user.name = name;
+      user.avatar = avatar;
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, name: user.name },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
+    });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
+
+app.get('/api/auth/me', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, email, name, avatar FROM users WHERE id = $1', [req.user.userId]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+// ── Stripe Payments ───────────────────────────────────────
+app.post('/api/payments/create-intent', async (req, res) => {
+  const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+  if (!STRIPE_SECRET_KEY) {
+    return res.status(503).json({ error: 'Stripe not configured' });
+  }
+  try {
+    const { default: Stripe } = await import('stripe');
+    const stripe = new Stripe(STRIPE_SECRET_KEY);
+    const { amount, currency = 'usd' } = req.body;
+    if (!amount || amount < 50) return res.status(400).json({ error: 'Invalid amount' });
+    const paymentIntent = await stripe.paymentIntents.create({ amount, currency });
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    console.error('Stripe error:', err);
+    res.status(500).json({ error: 'Failed to create payment intent' });
+  }
 });
 
 // ── Products ─────────────────────────────────────────────
@@ -155,7 +255,6 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-// Bulk stock update
 app.patch('/api/products/:id/stock', async (req, res) => {
   try {
     const { stock } = req.body;
@@ -203,7 +302,7 @@ app.get('/api/orders', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
-    const { items, subtotal, shipping, total, status, shipping_address } = req.body;
+    const { items, subtotal, shipping, total, status, shipping_address, payment_intent_id } = req.body;
     const result = await pool.query(
       `INSERT INTO orders (items, subtotal, shipping, total, status, shipping_address)
        VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,

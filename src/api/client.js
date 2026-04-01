@@ -5,6 +5,8 @@ async function request(method, path, body) {
     method,
     headers: { 'Content-Type': 'application/json' },
   };
+  const token = localStorage.getItem('spaizd_user_token');
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${path}`, opts);
   if (!res.ok) {
@@ -45,5 +47,12 @@ export const api = {
     create: (data) => request('POST', '/orders', data),
     update: (id, data) => request('PUT', `/orders/${id}`, data),
     delete: (id) => request('DELETE', `/orders/${id}`),
+  },
+  payments: {
+    createIntent: (data) => request('POST', '/payments/create-intent', data),
+  },
+  auth: {
+    googleLogin: (credential) => request('POST', '/auth/google', { credential }),
+    me: () => request('GET', '/auth/me'),
   },
 };
