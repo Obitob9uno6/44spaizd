@@ -48,6 +48,11 @@ export const api = {
     update: (id, data) => request('PUT', `/orders/${id}`, data),
     delete: (id) => request('DELETE', `/orders/${id}`),
   },
+  reviews: {
+    list: (productId) => request('GET', `/products/${productId}/reviews`),
+    create: (productId, data) => request('POST', `/products/${productId}/reviews`, data),
+    delete: (productId, reviewId) => request('DELETE', `/products/${productId}/reviews/${reviewId}`),
+  },
   payments: {
     createIntent: (data) => request('POST', '/payments/create-intent', data),
   },

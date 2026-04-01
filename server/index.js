@@ -141,6 +141,47 @@ app.post('/api/payments/create-intent', async (req, res) => {
   }
 });
 
+// ── Reviews ───────────────────────────────────────────────
+app.get('/api/products/:id/reviews', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM reviews WHERE product_id = $1 ORDER BY created_date DESC',
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+app.post('/api/products/:id/reviews', async (req, res) => {
+  try {
+    const { reviewer_name, rating, comment } = req.body;
+    if (!reviewer_name?.trim()) return res.status(400).json({ error: 'Name required' });
+    if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Rating must be 1–5' });
+    const result = await pool.query(
+      `INSERT INTO reviews (product_id, reviewer_name, rating, comment)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.params.id, reviewer_name.trim(), parseInt(rating), comment?.trim() || '']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create review' });
+  }
+});
+
+app.delete('/api/products/:productId/reviews/:reviewId', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM reviews WHERE id = $1 AND product_id = $2', [req.params.reviewId, req.params.productId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete review' });
+  }
+});
+
 // ── Products ─────────────────────────────────────────────
 app.get('/api/products', async (req, res) => {
   try {

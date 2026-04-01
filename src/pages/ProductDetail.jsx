@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/api/client';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, Minus, Plus, Heart } from 'lucide-react';
 import { addToCart } from '../lib/cartStore';
+import { isWishlisted, toggleWishlist } from '@/lib/wishlistStore';
 import { toast } from 'sonner';
+import SizeGuideModal from '@/components/SizeGuideModal';
+import RelatedProducts from '@/components/RelatedProducts';
+import ReviewsSection from '@/components/ReviewsSection';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -13,6 +17,8 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [wishlisted, setWishlisted] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -20,6 +26,7 @@ export default function ProductDetail() {
         const p = await api.products.get(id);
         setProduct(p);
         if (p.sizes?.length > 0) setSelectedSize(p.sizes[0]);
+        setWishlisted(isWishlisted(p.id));
       } catch {
         setProduct(null);
       }
@@ -27,6 +34,12 @@ export default function ProductDetail() {
     }
     load();
   }, [id]);
+
+  useEffect(() => {
+    const handler = () => product && setWishlisted(isWishlisted(product.id));
+    window.addEventListener('wishlist-update', handler);
+    return () => window.removeEventListener('wishlist-update', handler);
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!selectedSize) { toast.error('Please select a size'); return; }
@@ -39,6 +52,12 @@ export default function ProductDetail() {
       image: product.images[0],
     });
     toast.success('Added to cart');
+  };
+
+  const handleWishlist = () => {
+    const added = toggleWishlist(product.id);
+    setWishlisted(added);
+    toast.success(added ? 'Saved to wishlist' : 'Removed from wishlist');
   };
 
   if (loading) {
@@ -59,6 +78,7 @@ export default function ProductDetail() {
   }
 
   const isSoldOut = product.badge === 'SOLD OUT' || product.stock === 0;
+  const isPants = product.category === 'pants';
 
   return (
     <div className="pt-16">
@@ -72,6 +92,7 @@ export default function ProductDetail() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-16">
+          {/* Images */}
           <div className="lg:col-span-3 space-y-1">
             <motion.div
               key={activeImage}
@@ -112,6 +133,7 @@ export default function ProductDetail() {
             )}
           </div>
 
+          {/* Info panel */}
           <div className="lg:col-span-2 space-y-6">
             <div>
               <span className="text-[10px] text-muted-foreground tracking-widest">{product.category?.toUpperCase()}</span>
@@ -126,7 +148,15 @@ export default function ProductDetail() {
 
             {product.sizes?.length > 0 && (
               <div>
-                <span className="text-[10px] text-muted-foreground tracking-widest mb-2 block">SIZE</span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] text-muted-foreground tracking-widest">SIZE</span>
+                  <button
+                    onClick={() => setSizeGuideOpen(true)}
+                    className="text-[9px] tracking-wider text-muted-foreground hover:text-primary underline underline-offset-2 transition-colors"
+                  >
+                    SIZE GUIDE
+                  </button>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map(s => (
                     <button
@@ -164,13 +194,26 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={isSoldOut}
-              className="w-full bg-primary text-primary-foreground py-4 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSoldOut ? 'SOLD OUT' : 'ADD TO TRIM ROOM'}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddToCart}
+                disabled={isSoldOut}
+                className="flex-1 bg-primary text-primary-foreground py-4 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSoldOut ? 'SOLD OUT' : 'ADD TO TRIM ROOM'}
+              </button>
+              <button
+                onClick={handleWishlist}
+                className={`w-14 flex items-center justify-center border transition-colors ${
+                  wishlisted
+                    ? 'border-primary text-primary bg-primary/10'
+                    : 'border-border text-muted-foreground hover:border-primary hover:text-primary'
+                }`}
+                title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+              >
+                <Heart className={`w-4 h-4 ${wishlisted ? 'fill-primary' : ''}`} />
+              </button>
+            </div>
 
             {product.description && (
               <div>
@@ -187,7 +230,19 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
+
+        {/* Reviews */}
+        <ReviewsSection productId={id} />
+
+        {/* Related products */}
+        <RelatedProducts currentProductId={id} category={product.category} />
       </div>
+
+      <SizeGuideModal
+        open={sizeGuideOpen}
+        onClose={() => setSizeGuideOpen(false)}
+        category={isPants ? 'pants' : 'tops'}
+      />
     </div>
   );
 }
