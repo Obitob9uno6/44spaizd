@@ -30,7 +30,7 @@ export default function Footer() {
             <h4 className="text-xs font-bold tracking-wider mb-4 text-muted-foreground">INFO</h4>
             <div className="flex flex-col gap-2">
               <Link to="/vip" className="text-xs text-foreground hover:text-primary transition-colors">VIP Access</Link>
-              <span className="text-xs text-foreground">Shipping & Returns</span>
+              <Link to="/shipping" className="text-xs text-foreground hover:text-primary transition-colors">Shipping & Returns</Link>
               <span className="text-xs text-foreground">Size Guide</span>
               <span className="text-xs text-foreground">Contact</span>
             </div>
@@ -57,6 +57,10 @@ export default function Footer() {
           <p className="text-[10px] text-muted-foreground tracking-wider">
             © 2026 SPAIZD. ALL RIGHTS RESERVED.
           </p>
+          <div className="flex gap-4">
+            <Link to="/privacy" className="text-[10px] text-muted-foreground hover:text-foreground tracking-wider transition-colors">PRIVACY POLICY</Link>
+            <Link to="/terms" className="text-[10px] text-muted-foreground hover:text-foreground tracking-wider transition-colors">TERMS</Link>
+          </div>
           <p className="text-[10px] text-muted-foreground tracking-wider">
             CALI-GROWN STREETWEAR — EST. 2024 🌴
           </p>
