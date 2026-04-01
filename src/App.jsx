@@ -17,6 +17,9 @@ import AdminOverview from './pages/admin/AdminOverview';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminDrops from './pages/admin/AdminDrops';
 import AdminOrders from './pages/admin/AdminOrders';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import ShippingReturns from './pages/ShippingReturns';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -51,6 +54,9 @@ const AuthenticatedApp = () => {
         <Route path="/vip" element={<VIP />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/shipping" element={<ShippingReturns />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
       <Route path="/admin" element={<AdminLayout />}>
