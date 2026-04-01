@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 export default function Checkout() {
   const [cart, setCart] = useState([]);
   const [form, setForm] = useState({ name: '', email: '', address: '', city: '', state: '', zip: '', country: 'US' });
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
@@ -19,14 +20,23 @@ export default function Checkout() {
   const total = getCartTotal(cart);
   const shipping = total >= 150 ? 0 : 12;
 
+  const validate = () => {
+    const e = {};
+    if (!form.name.trim()) e.name = 'Required';
+    if (!form.email.trim()) e.email = 'Required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Invalid email';
+    if (!form.address.trim()) e.address = 'Required';
+    if (!form.city.trim()) e.city = 'Required';
+    if (!form.zip.trim()) e.zip = 'Required';
+    return e;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.address || !form.city || !form.zip) {
-      toast.error('Please fill all required fields');
-      return;
-    }
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    setErrors({});
     setSubmitting(true);
-
     await base44.entities.Order.create({
       items: cart.map(item => ({
         product_id: item.product_id,
@@ -84,35 +94,47 @@ export default function Checkout() {
             <div>
               <span className="text-[10px] text-muted-foreground tracking-widest mb-4 block">SHIPPING INFORMATION</span>
               <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="FULL NAME *"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-                <input
-                  type="email"
-                  placeholder="EMAIL *"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-                <input
-                  type="text"
-                  placeholder="ADDRESS *"
-                  value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  className="w-full bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
-                <div className="grid grid-cols-2 gap-3">
+                <div>
                   <input
                     type="text"
-                    placeholder="CITY *"
-                    value={form.city}
-                    onChange={(e) => setForm({ ...form, city: e.target.value })}
-                    className="w-full bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                    placeholder="FULL NAME *"
+                    value={form.name}
+                    onChange={(e) => { setForm({ ...form, name: e.target.value }); setErrors(ev => ({ ...ev, name: '' })); }}
+                    className={`w-full bg-secondary border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary ${errors.name ? 'border-destructive' : 'border-border'}`}
                   />
+                  {errors.name && <p className="text-[10px] text-destructive mt-1">{errors.name}</p>}
+                </div>
+                <div>
+                  <input
+                    type="email"
+                    placeholder="EMAIL *"
+                    value={form.email}
+                    onChange={(e) => { setForm({ ...form, email: e.target.value }); setErrors(ev => ({ ...ev, email: '' })); }}
+                    className={`w-full bg-secondary border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary ${errors.email ? 'border-destructive' : 'border-border'}`}
+                  />
+                  {errors.email && <p className="text-[10px] text-destructive mt-1">{errors.email}</p>}
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="ADDRESS *"
+                    value={form.address}
+                    onChange={(e) => { setForm({ ...form, address: e.target.value }); setErrors(ev => ({ ...ev, address: '' })); }}
+                    className={`w-full bg-secondary border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary ${errors.address ? 'border-destructive' : 'border-border'}`}
+                  />
+                  {errors.address && <p className="text-[10px] text-destructive mt-1">{errors.address}</p>}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="CITY *"
+                      value={form.city}
+                      onChange={(e) => { setForm({ ...form, city: e.target.value }); setErrors(ev => ({ ...ev, city: '' })); }}
+                      className={`w-full bg-secondary border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary ${errors.city ? 'border-destructive' : 'border-border'}`}
+                    />
+                    {errors.city && <p className="text-[10px] text-destructive mt-1">{errors.city}</p>}
+                  </div>
                   <input
                     type="text"
                     placeholder="STATE"
@@ -122,13 +144,16 @@ export default function Checkout() {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    placeholder="ZIP CODE *"
-                    value={form.zip}
-                    onChange={(e) => setForm({ ...form, zip: e.target.value })}
-                    className="w-full bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  />
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="ZIP CODE *"
+                      value={form.zip}
+                      onChange={(e) => { setForm({ ...form, zip: e.target.value }); setErrors(ev => ({ ...ev, zip: '' })); }}
+                      className={`w-full bg-secondary border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary ${errors.zip ? 'border-destructive' : 'border-border'}`}
+                    />
+                    {errors.zip && <p className="text-[10px] text-destructive mt-1">{errors.zip}</p>}
+                  </div>
                   <input
                     type="text"
                     placeholder="COUNTRY"
