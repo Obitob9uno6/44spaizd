@@ -1,17 +1,50 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import multer from 'multer';
 import pool from './db.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
 
+// Serve uploaded images
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
+// Multer config for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(process.cwd(), 'uploads')),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error('Only image files allowed'));
+  },
+});
+
+// ── Image Upload ──────────────────────────────────────────
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const url = `/uploads/${req.file.filename}`;
+  res.json({ url });
+});
+
 // ── Products ─────────────────────────────────────────────
 app.get('/api/products', async (req, res) => {
   try {
-    const { category, is_active, featured, sort = '-created_date', limit = 50 } = req.query;
+    const { category, is_active, featured, sort = '-created_date', limit = 100 } = req.query;
     let where = [];
     let values = [];
     let idx = 1;
@@ -35,6 +68,8 @@ app.get('/api/products', async (req, res) => {
     if (sort === 'price') orderBy = 'price ASC';
     else if (sort === '-price') orderBy = 'price DESC';
     else if (sort === 'created_date') orderBy = 'created_date ASC';
+    else if (sort === 'name') orderBy = 'name ASC';
+    else if (sort === 'stock') orderBy = 'stock ASC';
 
     const query = `SELECT * FROM products ${whereClause} ORDER BY ${orderBy} LIMIT $${idx}`;
     values.push(parseInt(limit));
@@ -71,10 +106,10 @@ app.post('/api/products', async (req, res) => {
          sizes, images, stock, badge, featured, is_active, sku, origin)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        RETURNING *`,
-      [name, slug, price || 0, compare_price || null, category || 'tees',
-       description, materials, weight, JSON.stringify(sizes || []),
+      [name, slug || '', price || 0, compare_price || null, category || 'tees',
+       description || '', materials || '', weight || '', JSON.stringify(sizes || []),
        JSON.stringify(images || []), stock || 0, badge || '', featured || false,
-       is_active !== false, sku, origin]
+       is_active !== false, sku || '', origin || '']
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -97,10 +132,10 @@ app.put('/api/products/:id', async (req, res) => {
         stock=$11, badge=$12, featured=$13, is_active=$14, sku=$15, origin=$16,
         updated_date=NOW()
        WHERE id=$17 RETURNING *`,
-      [name, slug, price || 0, compare_price || null, category || 'tees',
-       description, materials, weight, JSON.stringify(sizes || []),
+      [name, slug || '', price || 0, compare_price || null, category || 'tees',
+       description || '', materials || '', weight || '', JSON.stringify(sizes || []),
        JSON.stringify(images || []), stock || 0, badge || '', featured || false,
-       is_active !== false, sku, origin, req.params.id]
+       is_active !== false, sku || '', origin || '', req.params.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
     res.json(result.rows[0]);
@@ -120,13 +155,45 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
+// Bulk stock update
+app.patch('/api/products/:id/stock', async (req, res) => {
+  try {
+    const { stock } = req.body;
+    const result = await pool.query(
+      'UPDATE products SET stock=$1, updated_date=NOW() WHERE id=$2 RETURNING *',
+      [parseInt(stock) || 0, req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update stock' });
+  }
+});
+
 // ── Orders ────────────────────────────────────────────────
 app.get('/api/orders', async (req, res) => {
   try {
-    const { sort = '-created_date', limit = 100 } = req.query;
+    const { sort = '-created_date', limit = 200, status } = req.query;
+    let where = [];
+    let values = [];
+    let idx = 1;
+
+    if (status) {
+      where.push(`status = $${idx++}`);
+      values.push(status);
+    }
+
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
     let orderBy = 'created_date DESC';
     if (sort === 'created_date') orderBy = 'created_date ASC';
-    const result = await pool.query(`SELECT * FROM orders ORDER BY ${orderBy} LIMIT $1`, [parseInt(limit)]);
+    if (sort === '-total') orderBy = 'total DESC';
+
+    values.push(parseInt(limit));
+    const result = await pool.query(
+      `SELECT * FROM orders ${whereClause} ORDER BY ${orderBy} LIMIT $${idx}`,
+      values
+    );
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -165,10 +232,20 @@ app.put('/api/orders/:id', async (req, res) => {
   }
 });
 
-// ── Admin auth (simple secret-based) ────────────────────
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM orders WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete order' });
+  }
+});
+
+// ── Admin auth ────────────────────────────────────────────
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'spaizd2024';
   if (password === adminPassword) {
     res.json({ success: true, role: 'admin' });
   } else {

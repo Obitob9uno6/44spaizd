@@ -14,9 +14,17 @@ async function request(method, path, body) {
   return res.json();
 }
 
+export async function uploadImage(file) {
+  const form = new FormData();
+  form.append('image', file);
+  const res = await fetch('/api/upload', { method: 'POST', body: form });
+  if (!res.ok) throw new Error('Upload failed');
+  return res.json();
+}
+
 export const api = {
   products: {
-    list: (sort = '-created_date', limit = 100) =>
+    list: (sort = '-created_date', limit = 200) =>
       request('GET', `/products?sort=${sort}&limit=${limit}`),
     filter: (filters = {}, sort = '-created_date', limit = 50) => {
       const params = new URLSearchParams({ sort, limit });
@@ -29,11 +37,13 @@ export const api = {
     create: (data) => request('POST', '/products', data),
     update: (id, data) => request('PUT', `/products/${id}`, data),
     delete: (id) => request('DELETE', `/products/${id}`),
+    updateStock: (id, stock) => request('PATCH', `/products/${id}/stock`, { stock }),
   },
   orders: {
-    list: (sort = '-created_date', limit = 100) =>
+    list: (sort = '-created_date', limit = 200) =>
       request('GET', `/orders?sort=${sort}&limit=${limit}`),
     create: (data) => request('POST', '/orders', data),
     update: (id, data) => request('PUT', `/orders/${id}`, data),
+    delete: (id) => request('DELETE', `/orders/${id}`),
   },
 };
