@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/client';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
@@ -19,7 +19,7 @@ export default function AdminOrders() {
   const [updating, setUpdating] = useState(null);
 
   useEffect(() => {
-    base44.entities.Order.list('-created_date').then(o => {
+    api.orders.list('-created_date').then(o => {
       setOrders(o);
       setLoading(false);
     });
@@ -27,7 +27,7 @@ export default function AdminOrders() {
 
   const updateStatus = async (id, status) => {
     setUpdating(id);
-    await base44.entities.Order.update(id, { status });
+    await api.orders.update(id, { status });
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
     setUpdating(null);
   };

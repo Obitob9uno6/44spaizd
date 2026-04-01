@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/client';
 import { Package, ShoppingBag, DollarSign, TrendingUp } from 'lucide-react';
 
 export default function AdminOverview() {
@@ -9,8 +9,8 @@ export default function AdminOverview() {
 
   useEffect(() => {
     Promise.all([
-      base44.entities.Product.list(),
-      base44.entities.Order.list('-created_date', 20),
+      api.products.list(),
+      api.orders.list('-created_date', 20),
     ]).then(([p, o]) => {
       setProducts(p);
       setOrders(o);
@@ -20,7 +20,7 @@ export default function AdminOverview() {
 
   const totalRevenue = orders
     .filter(o => o.status !== 'cancelled')
-    .reduce((sum, o) => sum + (o.total || 0), 0);
+    .reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
 
   const stats = [
     { label: 'TOTAL PRODUCTS', value: products.length, icon: Package, color: 'text-primary' },
@@ -74,7 +74,7 @@ export default function AdminOverview() {
                       {order.status?.toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right font-bold">${order.total?.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-bold">${parseFloat(order.total || 0).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

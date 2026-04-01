@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/client';
 import { Plus, Pencil, Trash2, X, Check, Upload } from 'lucide-react';
 
 const EMPTY = {
@@ -21,7 +21,7 @@ export default function AdminProducts() {
   const [imageInput, setImageInput] = useState('');
 
   const load = () => {
-    base44.entities.Product.list('-created_date').then(p => {
+    api.products.list('-created_date').then(p => {
       setProducts(p);
       setLoading(false);
     });
@@ -41,9 +41,9 @@ export default function AdminProducts() {
       stock: parseInt(form.stock) || 0,
     };
     if (editing === 'new') {
-      await base44.entities.Product.create(data);
+      await api.products.create(data);
     } else {
-      await base44.entities.Product.update(editing, data);
+      await api.products.update(editing, data);
     }
     setSaving(false);
     setEditing(null);
@@ -52,7 +52,7 @@ export default function AdminProducts() {
 
   const del = async (id) => {
     if (!confirm('Delete this product?')) return;
-    await base44.entities.Product.delete(id);
+    await api.products.delete(id);
     load();
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/client';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
 
@@ -25,7 +25,6 @@ export default function Shop() {
   const [category, setCategory] = useState('');
   const [sort, setSort] = useState('-created_date');
 
-  // Read initial category from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get('category');
@@ -35,12 +34,9 @@ export default function Shop() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      let results;
-      if (category) {
-        results = await base44.entities.Product.filter({ category, is_active: true }, sort, 50);
-      } else {
-        results = await base44.entities.Product.filter({ is_active: true }, sort, 50);
-      }
+      const filters = { is_active: true };
+      if (category) filters.category = category;
+      const results = await api.products.filter(filters, sort, 50);
       setProducts(results);
       setLoading(false);
     }
@@ -49,7 +45,6 @@ export default function Shop() {
 
   return (
     <div className="pt-16">
-      {/* Header */}
       <div className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
           <motion.div
@@ -65,11 +60,9 @@ export default function Shop() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            {/* Categories */}
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map(cat => (
                 <button
@@ -85,8 +78,6 @@ export default function Shop() {
                 </button>
               ))}
             </div>
-
-            {/* Sort */}
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
@@ -100,7 +91,6 @@ export default function Shop() {
         </div>
       </div>
 
-      {/* Product Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
@@ -109,9 +99,7 @@ export default function Shop() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-32">
-            <p className="text-xs text-muted-foreground tracking-wider">NO PRODUCTS FOUND</p>
-          </div>
+          <p className="text-xs text-muted-foreground text-center py-20">No products found.</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
             {products.map((product, idx) => (
@@ -119,13 +107,6 @@ export default function Shop() {
             ))}
           </div>
         )}
-
-        {/* Count */}
-        <div className="mt-8 text-center">
-          <span className="text-[10px] text-muted-foreground tracking-widest">
-            {products.length} ITEM{products.length !== 1 ? 'S' : ''}
-          </span>
-        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/client';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from '../ProductCard';
 
@@ -10,7 +10,7 @@ export default function FeaturedCollection() {
 
   useEffect(() => {
     async function load() {
-      const all = await base44.entities.Product.filter({ featured: true, is_active: true }, '-created_date', 6);
+      const all = await api.products.filter({ featured: true, is_active: true }, '-created_date', 6);
       setProducts(all);
       setLoading(false);
     }

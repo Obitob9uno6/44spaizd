@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/client';
 import { Zap, Check } from 'lucide-react';
 
 export default function AdminDrops() {
@@ -8,7 +8,7 @@ export default function AdminDrops() {
   const [saving, setSaving] = useState(null);
 
   useEffect(() => {
-    base44.entities.Product.list('-created_date').then(p => {
+    api.products.list('-created_date').then(p => {
       setProducts(p);
       setLoading(false);
     });
@@ -16,14 +16,14 @@ export default function AdminDrops() {
 
   const setBadge = async (id, badge) => {
     setSaving(id);
-    await base44.entities.Product.update(id, { badge });
+    await api.products.update(id, { badge });
     setProducts(prev => prev.map(p => p.id === id ? { ...p, badge } : p));
     setSaving(null);
   };
 
   const toggleFeatured = async (id, featured) => {
     setSaving(id + 'f');
-    await base44.entities.Product.update(id, { featured: !featured });
+    await api.products.update(id, { featured: !featured });
     setProducts(prev => prev.map(p => p.id === id ? { ...p, featured: !featured } : p));
     setSaving(null);
   };
