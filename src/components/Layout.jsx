@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import SmokeOverlay from './SmokeOverlay';
 import CannabisBackground from './CannabisBackground';
-import AnnouncementBar from './AnnouncementBar';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import CartPanel from './CartPanel';
@@ -14,7 +13,6 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <AgeGate />
-      <AnnouncementBar />
       <SmokeOverlay />
       <CannabisBackground />
       <div className="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
