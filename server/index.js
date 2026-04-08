@@ -519,8 +519,9 @@ app.post('/api/orders', optionalAuth, async (req, res) => {
     let appliedCode = null;
     let serverDiscount = 0;
     if (promo_code) {
+      // Lock the row to prevent concurrent usage exceeding max_uses
       const promoResult = await client.query(
-        'SELECT * FROM promo_codes WHERE UPPER(code) = UPPER($1)',
+        'SELECT * FROM promo_codes WHERE UPPER(code) = UPPER($1) FOR UPDATE',
         [promo_code]
       );
       if (promoResult.rows.length === 0) {
