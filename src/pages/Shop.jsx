@@ -4,6 +4,7 @@ import { api } from '@/api/client';
 import { motion } from 'framer-motion';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
+import PageHero from '../components/PageHero';
 
 const CATEGORIES = [
   { value: '', label: 'ALL' },
@@ -74,20 +75,14 @@ export default function Shop() {
 
   return (
     <div className="pt-16">
-      <div className="border-b border-border">
+      <PageHero theme="shop" className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="text-[10px] text-primary tracking-widest font-bold mb-2 block">CATALOG</span>
-            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
-              {query ? `SEARCH RESULTS` : category ? CATEGORIES.find(c => c.value === category)?.label || 'SHOP' : 'ALL PRODUCTS'}
-            </h1>
-          </motion.div>
+          <span className="text-[10px] text-primary tracking-widest font-bold mb-2 block">CATALOG</span>
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
+            {query ? `SEARCH RESULTS` : category ? CATEGORIES.find(c => c.value === category)?.label || 'SHOP' : 'ALL PRODUCTS'}
+          </h1>
         </div>
-      </div>
+      </PageHero>
 
       {/* Search bar */}
       <div className="border-b border-border bg-secondary/30">

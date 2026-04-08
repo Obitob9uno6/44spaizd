@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Clock, Zap } from 'lucide-react';
 import { api } from '@/api/client';
+import PageHero from '../components/PageHero';
 
 function calcCountdown(target) {
   const diff = Math.max(0, target - Date.now());
@@ -60,7 +61,7 @@ export default function Drops() {
 
   return (
     <div className="pt-16">
-      <div className="border-b border-border">
+      <PageHero theme="drops" className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
           <span className="text-[10px] text-primary tracking-widest font-bold">LIMITED RELEASES</span>
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mt-2">DROPS</h1>
@@ -83,7 +84,7 @@ export default function Drops() {
             </Link>
           </div>
         </div>
-      </div>
+      </PageHero>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
         {tab === 'upcoming' ? (

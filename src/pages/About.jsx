@@ -1,25 +1,20 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Sprout, Flame, Handshake } from 'lucide-react';
+import PageHero from '../components/PageHero';
 
 export default function About() {
   return (
     <div className="pt-16">
-      <div className="border-b border-border">
+      <PageHero theme="about" className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="text-[10px] text-primary tracking-widest font-bold">PREMIUM CANNABIS-INSPIRED STREETWEAR</span>
-            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mt-2">ABOUT SPAIZD</h1>
-            <p className="text-sm text-muted-foreground mt-4 max-w-xl leading-relaxed">
-              Premium cannabis-inspired streetwear for the cultivation community. Where passion meets fashion in the grow room.
-            </p>
-          </motion.div>
+          <span className="text-[10px] text-primary tracking-widest font-bold">PREMIUM CANNABIS-INSPIRED STREETWEAR</span>
+          <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mt-2">ABOUT SPAIZD</h1>
+          <p className="text-sm text-muted-foreground mt-4 max-w-xl leading-relaxed">
+            Premium cannabis-inspired streetwear for the cultivation community. Where passion meets fashion in the grow room.
+          </p>
         </div>
-      </div>
+      </PageHero>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="grid md:grid-cols-2 gap-16">

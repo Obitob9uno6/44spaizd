@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
 import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import { api } from '@/api/client';
+import PageHero from '../components/PageHero';
 import { getWishlist, toggleWishlist } from '@/lib/wishlistStore';
 import { addToCart } from '@/lib/cartStore';
 import { toast } from 'sonner';
@@ -145,7 +146,7 @@ export default function Wishlist() {
 
   return (
     <div className="pt-16">
-      <div className="border-b border-border">
+      <PageHero theme="wishlist" className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
           <div className="flex items-center gap-3 mb-1">
             <CannabisLeaf className="w-5 h-5" active />
@@ -156,7 +157,7 @@ export default function Wishlist() {
             <p className="text-xs text-muted-foreground mt-2">{products.length} item{products.length !== 1 ? 's' : ''} saved</p>
           )}
         </div>
-      </div>
+      </PageHero>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {loading ? (

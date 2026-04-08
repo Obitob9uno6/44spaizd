@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Clock, Tag, Shield, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import PageHero from '../components/PageHero';
 
 const tiers = [
   {
@@ -79,14 +80,9 @@ export default function VIP() {
 
   return (
     <div className="pt-16">
-      <section className="border-b border-border">
+      <PageHero theme="vip" className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-32">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-2xl"
-          >
+          <div className="max-w-2xl">
             <span className="text-[10px] text-accent tracking-widest font-bold mb-2 block">VIP CLUB</span>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6">
               THE GOOD
@@ -96,9 +92,9 @@ export default function VIP() {
             <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
               Join the community that moves first and stays chillest. Early access, Cali-exclusive drops, and member-only pricing — because good things come to those who roll right.
             </p>
-          </motion.div>
+          </div>
         </div>
-      </section>
+      </PageHero>
 
       <section className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
