@@ -220,7 +220,7 @@ app.post('/api/subscribers', async (req, res) => {
   }
 });
 
-app.get('/api/subscribers', async (req, res) => {
+app.get('/api/subscribers', adminAuthMiddleware, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM subscribers ORDER BY created_date DESC');
     res.json(result.rows);
@@ -488,16 +488,49 @@ app.delete('/api/orders/:id', async (req, res) => {
 });
 
 // ── Admin auth ────────────────────────────────────────────
+function adminAuthMiddleware(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader?.startsWith('Bearer ')) return res.status(401).json({ error: 'Admin auth required' });
+  const token = authHeader.slice(7);
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (payload.role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid admin token' });
+  }
+}
+
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   const adminPassword = process.env.ADMIN_PASSWORD || 'spaizd2024';
   if (password === adminPassword) {
-    res.json({ success: true, role: 'admin' });
+    const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '8h' });
+    res.json({ success: true, role: 'admin', token });
   } else {
     res.status(401).json({ error: 'Invalid password' });
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+async function initDb() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS subscribers (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        source VARCHAR(50) NOT NULL DEFAULT 'newsletter',
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_date TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    console.log('[db] subscribers table ready');
+  } catch (err) {
+    console.error('[db] Failed to init subscribers table:', err.message);
+  }
+}
+
+initDb().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 });

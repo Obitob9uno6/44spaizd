@@ -29,7 +29,9 @@ export default function AdminLayout() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
+        const data = await res.json();
         sessionStorage.setItem('spaizd_admin', 'true');
+        if (data.token) sessionStorage.setItem('spaizd_admin_token', data.token);
         setAuthed(true);
       } else {
         setError('Invalid password');
@@ -43,6 +45,7 @@ export default function AdminLayout() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('spaizd_admin');
+    sessionStorage.removeItem('spaizd_admin_token');
     setAuthed(false);
     navigate('/');
   };

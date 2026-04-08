@@ -7,7 +7,10 @@ export default function AdminSubscribers() {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    fetch('/api/subscribers')
+    const token = sessionStorage.getItem('spaizd_admin_token') || '';
+    fetch('/api/subscribers', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(r => r.json())
       .then(data => { setSubscribers(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
