@@ -3,6 +3,7 @@ import { X, Minus, Plus, Trash2, Scissors } from 'lucide-react';
 import { getCart, removeFromCart, updateCartQuantity, getCartTotal, clearCart } from '../lib/cartStore';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import cartBg from '@/../attached_assets/cart2_1775651048981.jpg';
 
 export default function CartPanel({ isOpen, onClose }) {
   const [cart, setCart] = useState([]);
@@ -26,9 +27,13 @@ export default function CartPanel({ isOpen, onClose }) {
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
 
       {/* Panel */}
-      <div className="relative w-full max-w-lg bg-background border-l border-border flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+      <div className="relative w-full max-w-lg border-l border-border flex flex-col h-full overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={cartBg} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-background/85 backdrop-blur-sm" />
+        </div>
+
+        <div className="relative z-10 flex items-center justify-between px-6 py-5 border-b border-border">
           <div className="flex items-center gap-2">
             <Scissors className="w-4 h-4 text-primary" />
             <h2 className="text-sm font-bold tracking-widest">TRIM ROOM [{cart.length}]</h2>
@@ -39,7 +44,7 @@ export default function CartPanel({ isOpen, onClose }) {
         </div>
 
         {/* Items */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="relative z-10 flex-1 overflow-y-auto px-6 py-4">
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <Scissors className="w-10 h-10 text-muted-foreground/30 mb-4" />
@@ -106,7 +111,7 @@ export default function CartPanel({ isOpen, onClose }) {
 
         {/* Footer */}
         {cart.length > 0 && (
-          <div className="px-6 py-5 border-t border-border space-y-3">
+          <div className="relative z-10 px-6 py-5 border-t border-border space-y-3">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>SUBTOTAL</span>
               <span>${total.toFixed(2)}</span>
