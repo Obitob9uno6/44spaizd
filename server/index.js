@@ -50,6 +50,17 @@ function authMiddleware(req, res, next) {
   }
 }
 
+// Optional auth — attaches user if token present, never blocks
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      req.user = jwt.verify(authHeader.slice(7), JWT_SECRET);
+    } catch { /* ignore invalid token */ }
+  }
+  next();
+}
+
 // ── Image Upload ──────────────────────────────────────────
 app.post('/api/upload', upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -434,14 +445,15 @@ app.get('/api/orders', async (req, res) => {
   }
 });
 
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', optionalAuth, async (req, res) => {
   try {
     const { items, subtotal, shipping, total, status, shipping_address, payment_intent_id } = req.body;
+    const userId = req.user?.userId || null;
     const result = await pool.query(
-      `INSERT INTO orders (items, subtotal, shipping, total, status, shipping_address)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      `INSERT INTO orders (items, subtotal, shipping, total, status, shipping_address, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
       [JSON.stringify(items || []), subtotal || 0, shipping || 0,
-       total || 0, status || 'pending', JSON.stringify(shipping_address || {})]
+       total || 0, status || 'pending', JSON.stringify(shipping_address || {}), userId]
     );
 
     if (items && items.length > 0) {
@@ -463,6 +475,41 @@ app.post('/api/orders', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create order' });
+  }
+});
+
+// Public order lookup by email + order id
+app.get('/api/orders/lookup', async (req, res) => {
+  try {
+    const { email, id } = req.query;
+    if (!email?.trim() || !id) return res.status(400).json({ error: 'email and id are required' });
+    const result = await pool.query('SELECT * FROM orders WHERE id = $1', [parseInt(id)]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    const order = result.rows[0];
+    const addr = typeof order.shipping_address === 'string'
+      ? JSON.parse(order.shipping_address)
+      : (order.shipping_address || {});
+    if (!addr.email || addr.email.toLowerCase() !== email.trim().toLowerCase()) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json(order);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to lookup order' });
+  }
+});
+
+// Get logged-in user's own orders
+app.get('/api/orders/my', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_date DESC',
+      [req.user.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch orders' });
   }
 });
 
@@ -528,8 +575,13 @@ async function initDb() {
       )
     `);
     console.log('[db] subscribers table ready');
+
+    await pool.query(`
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
+    `);
+    console.log('[db] orders.user_id column ready');
   } catch (err) {
-    console.error('[db] Failed to init subscribers table:', err.message);
+    console.error('[db] init error:', err.message);
   }
 }
 

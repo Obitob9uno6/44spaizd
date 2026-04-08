@@ -47,6 +47,8 @@ export const api = {
     create: (data) => request('POST', '/orders', data),
     update: (id, data) => request('PUT', `/orders/${id}`, data),
     delete: (id) => request('DELETE', `/orders/${id}`),
+    lookup: (email, id) => request('GET', `/orders/lookup?email=${encodeURIComponent(email)}&id=${id}`),
+    my: () => request('GET', '/orders/my'),
   },
   reviews: {
     list: (productId) => request('GET', `/products/${productId}/reviews`),

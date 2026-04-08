@@ -88,7 +88,7 @@ function CheckoutForm({ cart, total, shipping }) {
       }
 
       if (paymentIntent.status === 'succeeded') {
-        await api.orders.create({
+        const order = await api.orders.create({
           items: cart.map(item => ({
             product_id: item.product_id,
             product_name: item.name,
@@ -106,7 +106,7 @@ function CheckoutForm({ cart, total, shipping }) {
         });
         clearCart();
         toast.success('Payment successful! Order placed.');
-        navigate('/order-confirmation');
+        navigate('/order-confirmation', { state: { orderId: order.id, email: form.email } });
       }
     } catch (err) {
       toast.error(err.message || 'Payment failed. Please try again.');
@@ -208,7 +208,7 @@ function NoStripeCheckoutForm({ cart, total, shipping }) {
     setErrors({});
     setSubmitting(true);
     try {
-      await api.orders.create({
+      const order = await api.orders.create({
         items: cart.map(item => ({
           product_id: item.product_id,
           product_name: item.name,
@@ -225,7 +225,7 @@ function NoStripeCheckoutForm({ cart, total, shipping }) {
       });
       clearCart();
       toast.success('Order placed successfully!');
-      navigate('/order-confirmation');
+      navigate('/order-confirmation', { state: { orderId: order.id, email: form.email } });
     } catch {
       toast.error('Failed to place order. Please try again.');
     } finally {

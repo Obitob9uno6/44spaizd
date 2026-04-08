@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, Package } from 'lucide-react';
 import { Scissors } from 'lucide-react';
 import { getCart, getCartCount } from '../lib/cartStore';
 import { useAuth } from '@/lib/AuthContext';
@@ -110,6 +110,12 @@ export default function Navbar({ onCartOpen }) {
                         <p className="text-[10px] font-bold tracking-wider truncate">{user?.name}</p>
                         <p className="text-[9px] text-muted-foreground truncate">{user?.email}</p>
                       </div>
+                      <Link
+                        to="/account/orders"
+                        className="flex items-center gap-2 px-4 py-2.5 text-[10px] tracking-wider text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                      >
+                        <Package className="w-3 h-3" /> MY ORDERS
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-[10px] tracking-wider text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"

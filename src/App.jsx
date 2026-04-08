@@ -20,6 +20,8 @@ import AdminDrops from './pages/admin/AdminDrops';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminSubscribers from './pages/admin/AdminSubscribers';
+import OrderLookup from './pages/OrderLookup';
+import AccountOrders from './pages/AccountOrders';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ShippingReturns from './pages/ShippingReturns';
@@ -57,6 +59,8 @@ const AuthenticatedApp = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/shipping" element={<ShippingReturns />} />
+        <Route path="/order-lookup" element={<OrderLookup />} />
+        <Route path="/account/orders" element={<AccountOrders />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
       <Route path="/admin" element={<AdminLayout />}>
