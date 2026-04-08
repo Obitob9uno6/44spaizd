@@ -18,11 +18,11 @@ export default function SmokeOverlay() {
     window.addEventListener('resize', resize);
 
     const COLORS = [
-      { r: 100, g: 160, b: 80 },
-      { r: 130, g: 80, b: 180 },
-      { r: 60, g: 140, b: 60 },
-      { r: 120, g: 60, b: 200 },
-      { r: 90, g: 150, b: 75 },
+      { r: 40, g: 70, b: 30 },
+      { r: 60, g: 35, b: 90 },
+      { r: 25, g: 60, b: 25 },
+      { r: 55, g: 25, b: 100 },
+      { r: 35, g: 65, b: 30 },
     ];
 
     const COUNT = 18;
@@ -35,7 +35,7 @@ export default function SmokeOverlay() {
         radius: 80 + Math.random() * 200,
         color,
         alpha: 0,
-        maxAlpha: 0.03 + Math.random() * 0.06,
+        maxAlpha: 0.05 + Math.random() * 0.08,
         vx: (Math.random() - 0.5) * 0.3,
         vy: (Math.random() - 0.5) * 0.2,
         driftX: (Math.random() - 0.5) * 0.008,
@@ -122,7 +122,7 @@ export default function SmokeOverlay() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 z-[5] pointer-events-none"
-      style={{ opacity: 0.9 }}
+      style={{ opacity: 1 }}
     />
   );
 }
