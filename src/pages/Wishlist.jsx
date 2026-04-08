@@ -19,7 +19,7 @@ function WishlistCard({ product, onRemove }) {
     setAdding(true);
     const { limitReached } = addToCart({
       product_id: product.id,
-      product_name: product.name,
+      name: product.name,
       price: parseFloat(product.price),
       size: defaultSize,
       quantity: 1,
@@ -134,7 +134,7 @@ export default function Wishlist() {
     Promise.all(wishlistIds.map(id => api.products.get(id).catch(() => null)))
       .then(results => setProducts(results.filter(Boolean)))
       .finally(() => setLoading(false));
-  }, [wishlistIds.length]);
+  }, [JSON.stringify(wishlistIds)]);
 
   const handleRemove = (productId) => {
     toggleWishlist(productId);
