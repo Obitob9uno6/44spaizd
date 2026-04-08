@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import pool from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -138,6 +139,94 @@ app.post('/api/payments/create-intent', async (req, res) => {
   } catch (err) {
     console.error('Stripe error:', err);
     res.status(500).json({ error: 'Failed to create payment intent' });
+  }
+});
+
+// ── Email helper ──────────────────────────────────────────
+function createMailTransport() {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const port = parseInt(process.env.SMTP_PORT || '587');
+  if (!host || !user || !pass) return null;
+  return nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } });
+}
+
+async function sendOrderConfirmation(order, address) {
+  const transport = createMailTransport();
+  if (!transport) {
+    console.log('[email] SMTP not configured — skipping order confirmation email');
+    return;
+  }
+  const toEmail = address?.email;
+  if (!toEmail) return;
+
+  const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
+  const itemRows = items.map(i =>
+    `<tr><td style="padding:4px 8px">${i.product_name || i.name} (${i.size})</td><td style="padding:4px 8px;text-align:right">x${i.quantity}</td><td style="padding:4px 8px;text-align:right">$${(i.price * i.quantity).toFixed(2)}</td></tr>`
+  ).join('');
+
+  const addr = address;
+  const addrLine = [addr.address, addr.city, addr.state, addr.zip, addr.country].filter(Boolean).join(', ');
+
+  const html = `
+    <div style="font-family:sans-serif;max-width:560px;margin:auto;color:#111">
+      <h2 style="letter-spacing:2px;font-size:18px">ORDER CONFIRMED</h2>
+      <p style="color:#666;font-size:13px">Thanks for your order, ${addr.name || 'customer'}! Here's your summary:</p>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin:16px 0">
+        <thead><tr style="border-bottom:2px solid #eee">
+          <th style="padding:4px 8px;text-align:left">Item</th>
+          <th style="padding:4px 8px;text-align:right">Qty</th>
+          <th style="padding:4px 8px;text-align:right">Price</th>
+        </tr></thead>
+        <tbody>${itemRows}</tbody>
+        <tfoot>
+          <tr><td colspan="2" style="padding:4px 8px;text-align:right;color:#666">Subtotal</td><td style="padding:4px 8px;text-align:right">$${Number(order.subtotal).toFixed(2)}</td></tr>
+          <tr><td colspan="2" style="padding:4px 8px;text-align:right;color:#666">Shipping</td><td style="padding:4px 8px;text-align:right">$${Number(order.shipping).toFixed(2)}</td></tr>
+          <tr style="font-weight:bold"><td colspan="2" style="padding:8px 8px;text-align:right">Total</td><td style="padding:8px 8px;text-align:right">$${Number(order.total).toFixed(2)}</td></tr>
+        </tfoot>
+      </table>
+      <p style="font-size:13px;color:#444"><strong>Ship to:</strong><br/>${addrLine}</p>
+      <p style="font-size:11px;color:#999;margin-top:24px">SPAIZD — Good Vibes, Better Fits</p>
+    </div>`;
+
+  try {
+    await transport.sendMail({
+      from: process.env.SMTP_FROM || `"SPAIZD" <${process.env.SMTP_USER}>`,
+      to: toEmail,
+      subject: `SPAIZD Order #${order.id} Confirmed`,
+      html,
+    });
+    console.log(`[email] Order confirmation sent to ${toEmail}`);
+  } catch (err) {
+    console.error('[email] Failed to send confirmation:', err.message);
+  }
+}
+
+// ── Subscribers ───────────────────────────────────────────
+app.post('/api/subscribers', async (req, res) => {
+  try {
+    const { email, source = 'newsletter' } = req.body;
+    if (!email?.trim()) return res.status(400).json({ error: 'Email required' });
+    await pool.query(
+      `INSERT INTO subscribers (email, source) VALUES ($1, $2)
+       ON CONFLICT (email) DO UPDATE SET source = EXCLUDED.source, is_active = true`,
+      [email.trim().toLowerCase(), source]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to subscribe' });
+  }
+});
+
+app.get('/api/subscribers', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM subscribers ORDER BY created_date DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch subscribers' });
   }
 });
 
@@ -362,7 +451,11 @@ app.post('/api/orders', async (req, res) => {
       }
     }
 
-    res.status(201).json(result.rows[0]);
+    const order = result.rows[0];
+    const addr = typeof shipping_address === 'string' ? JSON.parse(shipping_address) : (shipping_address || {});
+    sendOrderConfirmation(order, addr).catch(() => {});
+
+    res.status(201).json(order);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create order' });

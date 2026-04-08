@@ -4,12 +4,29 @@ import { toast } from 'sonner';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) return;
-    toast.success('Welcome to the inner circle.');
-    setEmail('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'newsletter' }),
+      });
+      if (res.ok) {
+        toast.success('Welcome to the inner circle.');
+        setEmail('');
+      } else {
+        toast.error('Something went wrong — try again.');
+      }
+    } catch {
+      toast.error('Connection error — try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,13 +51,15 @@ export default function Newsletter() {
             placeholder="YOUR EMAIL"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+            disabled={loading}
+            className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
           />
           <button
             type="submit"
-            className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors"
+            disabled={loading || !email}
+            className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-60"
           >
-            SUBSCRIBE
+            {loading ? '...' : 'SUBSCRIBE'}
           </button>
         </form>
       </motion.div>

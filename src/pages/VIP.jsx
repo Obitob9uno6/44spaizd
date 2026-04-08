@@ -39,9 +39,33 @@ const perks = [
 
 export default function VIP() {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleJoin = (tier) => {
     toast.success(`${tier} membership — coming soon.`);
+  };
+
+  const handleVipSignup = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'vip' }),
+      });
+      if (res.ok) {
+        toast.success('VIP waitlist joined.');
+        setEmail('');
+      } else {
+        toast.error('Something went wrong — try again.');
+      }
+    } catch {
+      toast.error('Connection error — try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -145,22 +169,21 @@ export default function VIP() {
           <p className="text-xs text-muted-foreground mb-8">
             Enter your email to get started with VIP access.
           </p>
-          <form
-            onSubmit={(e) => { e.preventDefault(); if (email) { toast.success('VIP waitlist joined.'); setEmail(''); } }}
-            className="flex max-w-md mx-auto"
-          >
+          <form onSubmit={handleVipSignup} className="flex max-w-md mx-auto">
             <input
               type="email"
               placeholder="YOUR EMAIL"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+              disabled={loading}
+              className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary disabled:opacity-60"
             />
             <button
               type="submit"
-              className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors flex items-center gap-2"
+              disabled={loading || !email}
+              className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-60"
             >
-              JOIN <ArrowRight className="w-3 h-3" />
+              {loading ? '...' : <><span>JOIN</span> <ArrowRight className="w-3 h-3" /></>}
             </button>
           </form>
         </div>
