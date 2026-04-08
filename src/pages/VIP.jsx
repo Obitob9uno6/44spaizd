@@ -40,6 +40,7 @@ const perks = [
 export default function VIP() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const handleJoin = (tier) => {
     toast.success(`${tier} membership — coming soon.`);
@@ -47,7 +48,15 @@ export default function VIP() {
 
   const handleVipSignup = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    setEmailError('');
+    if (!email.trim()) {
+      setEmailError('Email is required.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/subscribers', {
@@ -70,7 +79,6 @@ export default function VIP() {
 
   return (
     <div className="pt-16">
-      {/* Hero */}
       <section className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-32">
           <motion.div
@@ -79,7 +87,7 @@ export default function VIP() {
             transition={{ duration: 0.6 }}
             className="max-w-2xl"
           >
-            <span className="text-[10px] text-accent tracking-widest font-bold mb-2 block">VIP CLUB 🌿</span>
+            <span className="text-[10px] text-accent tracking-widest font-bold mb-2 block">VIP CLUB</span>
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6">
               THE GOOD
               <br />
@@ -92,7 +100,6 @@ export default function VIP() {
         </div>
       </section>
 
-      {/* Perks Grid */}
       <section className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1">
@@ -114,7 +121,6 @@ export default function VIP() {
         </div>
       </section>
 
-      {/* Tiers */}
       <section className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
           <div className="text-center mb-12">
@@ -162,29 +168,33 @@ export default function VIP() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-20">
         <div className="max-w-xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl font-bold tracking-tight mb-4">READY TO ELEVATE?</h2>
           <p className="text-xs text-muted-foreground mb-8">
             Enter your email to get started with VIP access.
           </p>
-          <form onSubmit={handleVipSignup} className="flex max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="YOUR EMAIL"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={loading || !email}
-              className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-60"
-            >
-              {loading ? '...' : <><span>JOIN</span> <ArrowRight className="w-3 h-3" /></>}
-            </button>
+          <form onSubmit={handleVipSignup} className="max-w-md mx-auto">
+            <div className="flex">
+              <input
+                type="email"
+                placeholder="YOUR EMAIL"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+                disabled={loading}
+                className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary disabled:opacity-60"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors flex items-center gap-2 disabled:opacity-60"
+              >
+                {loading ? '...' : <><span>JOIN</span> <ArrowRight className="w-3 h-3" /></>}
+              </button>
+            </div>
+            {emailError && (
+              <p className="text-[10px] text-destructive mt-1.5 text-left">{emailError}</p>
+            )}
           </form>
         </div>
       </section>

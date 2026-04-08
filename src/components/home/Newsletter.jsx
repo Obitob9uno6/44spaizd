@@ -5,10 +5,19 @@ import { toast } from 'sonner';
 export default function Newsletter() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    setError('');
+    if (!email.trim()) {
+      setError('Email is required.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/subscribers', {
@@ -45,22 +54,27 @@ export default function Newsletter() {
         <p className="text-xs text-muted-foreground mb-8">
           Early access, restock alerts, and Cali energy delivered straight to your inbox. No spam, just the goods.
         </p>
-        <form onSubmit={handleSubmit} className="flex max-w-md mx-auto">
-          <input
-            type="email"
-            placeholder="YOUR EMAIL"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
-            className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
-          />
-          <button
-            type="submit"
-            disabled={loading || !email}
-            className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-60"
-          >
-            {loading ? '...' : 'SUBSCRIBE'}
-          </button>
+        <form onSubmit={handleSubmit} className="max-w-md mx-auto">
+          <div className="flex">
+            <input
+              type="email"
+              placeholder="YOUR EMAIL"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(''); }}
+              disabled={loading}
+              className="flex-1 bg-secondary border border-border px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-primary text-primary-foreground px-6 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-60"
+            >
+              {loading ? '...' : 'SUBSCRIBE'}
+            </button>
+          </div>
+          {error && (
+            <p className="text-[10px] text-destructive mt-1.5 text-left">{error}</p>
+          )}
         </form>
       </motion.div>
     </section>

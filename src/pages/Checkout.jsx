@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCart, getCartTotal, clearCart } from '../lib/cartStore';
 import { api } from '@/api/client';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Lock, Tag, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, Lock, Tag, X, ChevronDown, ChevronUp, Scissors } from 'lucide-react';
 import { toast } from 'sonner';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -193,7 +193,7 @@ function CheckoutForm({ cart, subtotal, shipping, discount, appliedPromo, onAppl
         });
         clearCart();
         toast.success('Payment successful! Order placed.');
-        navigate('/order-confirmation', { state: { orderId: order.id, email: form.email } });
+        navigate('/order-confirmation', { state: { orderId: order.id, email: form.email, promoCode: appliedPromo?.code || null, discount, subtotal, shipping, total: finalTotal } });
       }
     } catch (err) {
       toast.error(err.message || 'Payment failed. Please try again.');
@@ -318,7 +318,7 @@ function NoStripeCheckoutForm({ cart, subtotal, shipping, discount, appliedPromo
       });
       clearCart();
       toast.success('Order placed successfully!');
-      navigate('/order-confirmation', { state: { orderId: order.id, email: form.email } });
+      navigate('/order-confirmation', { state: { orderId: order.id, email: form.email, promoCode: appliedPromo?.code || null, discount, subtotal, shipping, total: finalTotal } });
     } catch {
       toast.error('Failed to place order. Please try again.');
     } finally {
@@ -410,11 +410,20 @@ export default function Checkout() {
 
   if (cart.length === 0) {
     return (
-      <div className="pt-16 min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-xs text-muted-foreground tracking-wider">YOUR CART IS EMPTY</p>
-        <button onClick={() => navigate('/shop')} className="text-xs text-primary font-bold tracking-wider">
-          ← EXPLORE COLLECTION
-        </button>
+      <div className="pt-16 min-h-screen flex items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <Scissors className="w-10 h-10 text-muted-foreground/30 mx-auto mb-4" />
+          <h2 className="text-sm font-bold tracking-wider mb-2">YOUR CART IS EMPTY</h2>
+          <p className="text-xs text-muted-foreground mb-6">
+            Nothing in the trim room yet. Browse our collection to find your next piece.
+          </p>
+          <button
+            onClick={() => navigate('/shop')}
+            className="bg-primary text-primary-foreground px-8 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors"
+          >
+            EXPLORE COLLECTION
+          </button>
+        </div>
       </div>
     );
   }

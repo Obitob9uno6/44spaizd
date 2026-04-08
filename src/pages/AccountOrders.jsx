@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Package, ChevronDown, ChevronUp, Search, Tag } from 'lucide-react';
 import { api } from '@/api/client';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -62,6 +62,15 @@ function OrderRow({ order }) {
             <div className="flex justify-between text-muted-foreground">
               <span>Subtotal</span><span>${Number(order.subtotal).toFixed(2)}</span>
             </div>
+            {order.discount > 0 && (
+              <div className="flex justify-between text-primary">
+                <span className="flex items-center gap-1">
+                  <Tag className="w-3 h-3" />
+                  {order.promo_code || 'Discount'}
+                </span>
+                <span>-${Number(order.discount).toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-muted-foreground">
               <span>Shipping</span><span>${Number(order.shipping).toFixed(2)}</span>
             </div>

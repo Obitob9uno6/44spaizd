@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { Search, Package, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import { api } from '@/api/client';
 
 const STATUS_STYLES = {
@@ -163,6 +163,15 @@ export default function OrderLookup() {
                       <div className="flex justify-between text-muted-foreground">
                         <span>Subtotal</span><span>${Number(order.subtotal).toFixed(2)}</span>
                       </div>
+                      {order.discount > 0 && (
+                        <div className="flex justify-between text-primary">
+                          <span className="flex items-center gap-1">
+                            <Tag className="w-3 h-3" />
+                            {order.promo_code || 'Discount'}
+                          </span>
+                          <span>-${Number(order.discount).toFixed(2)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-muted-foreground">
                         <span>Shipping</span><span>${Number(order.shipping).toFixed(2)}</span>
                       </div>

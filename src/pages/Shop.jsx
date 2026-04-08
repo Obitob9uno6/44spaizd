@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '@/api/client';
 import { motion } from 'framer-motion';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
@@ -208,18 +209,42 @@ export default function Shop() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-xs text-muted-foreground tracking-wider mb-3">
+          <div className="text-center py-20 border border-dashed border-border">
+            <Search className="w-8 h-8 text-muted-foreground/30 mx-auto mb-4" />
+            <h2 className="text-sm font-bold tracking-wider mb-2">
               {query ? `NO RESULTS FOR "${query.toUpperCase()}"` : 'NO PRODUCTS FOUND'}
+            </h2>
+            <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto">
+              {query
+                ? 'Try a different search term or browse our full collection.'
+                : 'Check back soon — new drops are always on the way.'}
             </p>
-            {query && (
-              <button
-                onClick={clearSearch}
-                className="text-[10px] text-primary font-bold tracking-wider hover:underline"
-              >
-                CLEAR SEARCH
-              </button>
-            )}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              {query && (
+                <button
+                  onClick={clearSearch}
+                  className="border border-border text-foreground px-6 py-2.5 text-xs font-bold tracking-widest hover:border-primary hover:text-primary transition-colors"
+                >
+                  CLEAR SEARCH
+                </button>
+              )}
+              {category && (
+                <button
+                  onClick={() => setCategory('')}
+                  className="border border-border text-foreground px-6 py-2.5 text-xs font-bold tracking-widest hover:border-primary hover:text-primary transition-colors"
+                >
+                  VIEW ALL PRODUCTS
+                </button>
+              )}
+              {!query && !category && (
+                <Link
+                  to="/"
+                  className="bg-primary text-primary-foreground px-6 py-2.5 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors"
+                >
+                  BACK TO HOME
+                </Link>
+              )}
+            </div>
           </div>
         ) : (
           <>

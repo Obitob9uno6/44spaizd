@@ -41,13 +41,17 @@ export default function CartPanel({ isOpen, onClose }) {
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <p className="text-xs text-muted-foreground tracking-wider mb-6">YOUR TRIM ROOM IS EMPTY 🌿</p>
+            <div className="flex flex-col items-center justify-center h-full text-center px-4">
+              <Scissors className="w-10 h-10 text-muted-foreground/30 mb-4" />
+              <h3 className="text-sm font-bold tracking-wider mb-2">YOUR TRIM ROOM IS EMPTY</h3>
+              <p className="text-xs text-muted-foreground mb-6 max-w-xs">
+                Add some pieces to your trim room and we'll get you sorted.
+              </p>
               <button
                 onClick={() => { onClose(); navigate('/shop'); }}
-                className="text-xs font-bold tracking-wider text-primary hover:underline"
+                className="bg-primary text-primary-foreground px-8 py-3 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors"
               >
-                EXPLORE COLLECTION →
+                EXPLORE COLLECTION
               </button>
             </div>
           ) : (
