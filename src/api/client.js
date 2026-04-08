@@ -70,6 +70,9 @@ export const api = {
     list: (productId) => request('GET', `/products/${productId}/reviews`),
     create: (productId, data) => request('POST', `/products/${productId}/reviews`, data),
     delete: (productId, reviewId) => request('DELETE', `/products/${productId}/reviews/${reviewId}`),
+    listAll: () => adminRequest('GET', '/reviews'),
+    approve: (id) => adminRequest('PATCH', `/reviews/${id}/approve`),
+    adminDelete: (id) => adminRequest('DELETE', `/reviews/${id}`),
   },
   payments: {
     createIntent: (data) => request('POST', '/payments/create-intent', data),

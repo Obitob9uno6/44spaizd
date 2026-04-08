@@ -86,8 +86,12 @@ export default function ReviewsSection({ productId }) {
     setFormError('');
     setSubmitting(true);
     try {
-      await api.reviews.create(productId, form);
-      toast.success('Review submitted — thanks!');
+      const result = await api.reviews.create(productId, form);
+      if (result._pending_approval) {
+        toast.success('Review submitted — it will appear after approval.');
+      } else {
+        toast.success('Review submitted — thanks!');
+      }
       setForm({ reviewer_name: '', rating: 0, comment: '' });
       setShowForm(false);
       load();

@@ -246,12 +246,59 @@ app.get('/api/subscribers', adminAuthMiddleware, async (req, res) => {
 });
 
 // ── Reviews ───────────────────────────────────────────────
-app.get('/api/products/:id/reviews', async (req, res) => {
+// Admin: get all reviews with product name
+app.get('/api/reviews', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT r.*, p.name AS product_name
+      FROM reviews r
+      LEFT JOIN products p ON p.id = r.product_id
+      ORDER BY r.created_date DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+// Admin: approve a review
+app.patch('/api/reviews/:id/approve', adminAuthMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM reviews WHERE product_id = $1 ORDER BY created_date DESC',
+      'UPDATE reviews SET approved = true WHERE id = $1 RETURNING *',
       [req.params.id]
     );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Review not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to approve review' });
+  }
+});
+
+// Admin: delete any review by id
+app.delete('/api/reviews/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM reviews WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete review' });
+  }
+});
+
+// Public: get product reviews (filtered by approved when moderation is on)
+app.get('/api/products/:id/reviews', async (req, res) => {
+  try {
+    const settingResult = await pool.query(
+      "SELECT value FROM settings WHERE key = 'reviews_require_approval'"
+    );
+    const moderationOn = settingResult.rows[0]?.value === 'true';
+    const query = moderationOn
+      ? 'SELECT * FROM reviews WHERE product_id = $1 AND approved = true ORDER BY created_date DESC'
+      : 'SELECT * FROM reviews WHERE product_id = $1 ORDER BY created_date DESC';
+    const result = await pool.query(query, [req.params.id]);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -264,12 +311,23 @@ app.post('/api/products/:id/reviews', async (req, res) => {
     const { reviewer_name, rating, comment } = req.body;
     if (!reviewer_name?.trim()) return res.status(400).json({ error: 'Name required' });
     if (!rating || rating < 1 || rating > 5) return res.status(400).json({ error: 'Rating must be 1–5' });
-    const result = await pool.query(
-      `INSERT INTO reviews (product_id, reviewer_name, rating, comment)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [req.params.id, reviewer_name.trim(), parseInt(rating), comment?.trim() || '']
+
+    const settingResult = await pool.query(
+      "SELECT value FROM settings WHERE key = 'reviews_require_approval'"
     );
-    res.status(201).json(result.rows[0]);
+    const moderationOn = settingResult.rows[0]?.value === 'true';
+    const approved = !moderationOn;
+
+    const result = await pool.query(
+      `INSERT INTO reviews (product_id, reviewer_name, rating, comment, approved)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [req.params.id, reviewer_name.trim(), parseInt(rating), comment?.trim() || '', approved]
+    );
+    const review = result.rows[0];
+    if (!approved) {
+      return res.status(201).json({ ...review, _pending_approval: true });
+    }
+    res.status(201).json(review);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create review' });
@@ -634,6 +692,11 @@ async function initDb() {
       )
     `);
     console.log('[db] settings table ready');
+
+    await pool.query(`
+      ALTER TABLE reviews ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT true
+    `);
+    console.log('[db] reviews.approved column ready');
   } catch (err) {
     console.error('[db] init error:', err.message);
   }

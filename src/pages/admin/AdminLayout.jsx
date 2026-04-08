@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Zap, ShoppingBag, LogOut, Menu, X, Boxes, ExternalLink, Mail } from 'lucide-react';
+import { LayoutDashboard, Package, Zap, ShoppingBag, LogOut, Menu, X, Boxes, ExternalLink, Mail, MessageSquare } from 'lucide-react';
 
 export default function AdminLayout() {
   const [authed, setAuthed] = useState(false);
@@ -98,6 +98,7 @@ export default function AdminLayout() {
     { path: '/admin/inventory', label: 'INVENTORY', icon: Boxes },
     { path: '/admin/drops', label: 'DROPS', icon: Zap },
     { path: '/admin/orders', label: 'ORDERS', icon: ShoppingBag },
+    { path: '/admin/reviews', label: 'REVIEWS', icon: MessageSquare },
     { path: '/admin/subscribers', label: 'SUBSCRIBERS', icon: Mail },
   ];
 

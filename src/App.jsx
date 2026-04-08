@@ -20,6 +20,7 @@ import AdminDrops from './pages/admin/AdminDrops';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminInventory from './pages/admin/AdminInventory';
 import AdminSubscribers from './pages/admin/AdminSubscribers';
+import AdminReviews from './pages/admin/AdminReviews';
 import OrderLookup from './pages/OrderLookup';
 import AccountOrders from './pages/AccountOrders';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -70,6 +71,7 @@ const AuthenticatedApp = () => {
         <Route path="inventory" element={<AdminInventory />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="subscribers" element={<AdminSubscribers />} />
+        <Route path="reviews" element={<AdminReviews />} />
       </Route>
     </Routes>
   );
