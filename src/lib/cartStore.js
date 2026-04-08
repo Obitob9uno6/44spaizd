@@ -22,10 +22,15 @@ export function addToCart(item) {
     if (item.stock !== undefined) existing.stock = item.stock;
   } else {
     const capped = { ...item };
+    let newItemLimitReached = false;
     if (stock !== Infinity && capped.quantity > stock) {
       capped.quantity = stock;
+      newItemLimitReached = true;
     }
     cart.push(capped);
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    window.dispatchEvent(new Event('cart-update'));
+    return { cart, limitReached: newItemLimitReached };
   }
 
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
