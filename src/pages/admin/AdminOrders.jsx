@@ -152,6 +152,11 @@ export default function AdminOrders() {
                   <div className="flex items-center gap-3 mt-0.5">
                     <span className="text-xs font-bold">${parseFloat(order.total || 0).toFixed(2)}</span>
                     <span className="text-[10px] text-muted-foreground">{order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}</span>
+                    {order.promo_code && (
+                      <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded bg-green-500/15 text-green-400 border border-green-500/30 hidden sm:inline-block">
+                        {order.promo_code}
+                      </span>
+                    )}
                     <span className="text-[10px] text-muted-foreground hidden lg:block">{formatDate(order.created_date)}</span>
                   </div>
                 </div>
@@ -220,6 +225,12 @@ export default function AdminOrders() {
                           <span>Subtotal</span>
                           <span>${parseFloat(order.subtotal || 0).toFixed(2)}</span>
                         </div>
+                        {order.promo_code && (
+                          <div className="flex justify-between text-green-400">
+                            <span>Promo ({order.promo_code})</span>
+                            <span>-${parseFloat(order.discount || 0).toFixed(2)}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-muted-foreground">
                           <span>Shipping</span>
                           <span>{parseFloat(order.shipping || 0) === 0 ? 'FREE' : `$${parseFloat(order.shipping).toFixed(2)}`}</span>

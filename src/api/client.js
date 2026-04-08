@@ -35,7 +35,10 @@ async function adminRequest(method, path, body) {
 export async function uploadImage(file) {
   const form = new FormData();
   form.append('image', file);
-  const res = await fetch('/api/upload', { method: 'POST', body: form });
+  const headers = {};
+  const token = sessionStorage.getItem('spaizd_admin_token');
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch('/api/upload', { method: 'POST', body: form, headers });
   if (!res.ok) throw new Error('Upload failed');
   return res.json();
 }
@@ -52,19 +55,25 @@ export const api = {
       return request('GET', `/products?${params}`);
     },
     get: (id) => request('GET', `/products/${id}`),
-    create: (data) => request('POST', '/products', data),
-    update: (id, data) => request('PUT', `/products/${id}`, data),
-    delete: (id) => request('DELETE', `/products/${id}`),
-    updateStock: (id, stock) => request('PATCH', `/products/${id}/stock`, { stock }),
+    create: (data) => adminRequest('POST', '/products', data),
+    update: (id, data) => adminRequest('PUT', `/products/${id}`, data),
+    delete: (id) => adminRequest('DELETE', `/products/${id}`),
+    updateStock: (id, stock) => adminRequest('PATCH', `/products/${id}/stock`, { stock }),
   },
   orders: {
     list: (sort = '-created_date', limit = 200) =>
-      request('GET', `/orders?sort=${sort}&limit=${limit}`),
+      adminRequest('GET', `/orders?sort=${sort}&limit=${limit}`),
     create: (data) => request('POST', '/orders', data),
-    update: (id, data) => request('PUT', `/orders/${id}`, data),
-    delete: (id) => request('DELETE', `/orders/${id}`),
+    update: (id, data) => adminRequest('PUT', `/orders/${id}`, data),
+    delete: (id) => adminRequest('DELETE', `/orders/${id}`),
     lookup: (email, id) => request('GET', `/orders/lookup?email=${encodeURIComponent(email)}&id=${id}`),
     my: () => request('GET', '/orders/my'),
+  },
+  subscribers: {
+    delete: (id) => adminRequest('DELETE', `/subscribers/${id}`),
+  },
+  users: {
+    list: () => adminRequest('GET', '/users'),
   },
   reviews: {
     list: (productId) => request('GET', `/products/${productId}/reviews`),

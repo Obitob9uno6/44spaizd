@@ -62,7 +62,7 @@ function optionalAuth(req, res, next) {
 }
 
 // ── Image Upload ──────────────────────────────────────────
-app.post('/api/upload', upload.single('image'), (req, res) => {
+app.post('/api/upload', adminAuthMiddleware, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const url = `/uploads/${req.file.filename}`;
   res.json({ url });
@@ -245,6 +245,27 @@ app.get('/api/subscribers', adminAuthMiddleware, async (req, res) => {
   }
 });
 
+app.delete('/api/subscribers/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM subscribers WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete subscriber' });
+  }
+});
+
+// ── Users (admin) ─────────────────────────────────────────
+app.get('/api/users', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT id, name, email, avatar, created_date FROM users ORDER BY created_date DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
 // ── Reviews ───────────────────────────────────────────────
 // Admin: get all reviews with product name
 app.get('/api/reviews', adminAuthMiddleware, async (req, res) => {
@@ -396,7 +417,7 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-app.post('/api/products', async (req, res) => {
+app.post('/api/products', adminAuthMiddleware, async (req, res) => {
   try {
     const {
       name, slug, price, compare_price, category, description,
@@ -421,7 +442,7 @@ app.post('/api/products', async (req, res) => {
   }
 });
 
-app.put('/api/products/:id', async (req, res) => {
+app.put('/api/products/:id', adminAuthMiddleware, async (req, res) => {
   try {
     const {
       name, slug, price, compare_price, category, description,
@@ -448,7 +469,7 @@ app.put('/api/products/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/products/:id', async (req, res) => {
+app.delete('/api/products/:id', adminAuthMiddleware, async (req, res) => {
   try {
     await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
     res.json({ success: true });
@@ -458,7 +479,7 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-app.patch('/api/products/:id/stock', async (req, res) => {
+app.patch('/api/products/:id/stock', adminAuthMiddleware, async (req, res) => {
   try {
     const { stock } = req.body;
     const result = await pool.query(
@@ -474,7 +495,7 @@ app.patch('/api/products/:id/stock', async (req, res) => {
 });
 
 // ── Orders ────────────────────────────────────────────────
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', adminAuthMiddleware, async (req, res) => {
   try {
     const { sort = '-created_date', limit = 200, status } = req.query;
     let where = [];
@@ -630,7 +651,7 @@ app.get('/api/orders/my', authMiddleware, async (req, res) => {
   }
 });
 
-app.put('/api/orders/:id', async (req, res) => {
+app.put('/api/orders/:id', adminAuthMiddleware, async (req, res) => {
   try {
     const { status } = req.body;
     const result = await pool.query(
@@ -645,7 +666,7 @@ app.put('/api/orders/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/orders/:id', async (req, res) => {
+app.delete('/api/orders/:id', adminAuthMiddleware, async (req, res) => {
   try {
     await pool.query('DELETE FROM orders WHERE id = $1', [req.params.id]);
     res.json({ success: true });

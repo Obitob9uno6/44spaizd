@@ -22,6 +22,8 @@ import AdminInventory from './pages/admin/AdminInventory';
 import AdminSubscribers from './pages/admin/AdminSubscribers';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminPromoCodes from './pages/admin/AdminPromoCodes';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminStoreSettings from './pages/admin/AdminStoreSettings';
 import OrderLookup from './pages/OrderLookup';
 import AccountOrders from './pages/AccountOrders';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -76,6 +78,8 @@ const AuthenticatedApp = () => {
         <Route path="subscribers" element={<AdminSubscribers />} />
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="promo-codes" element={<AdminPromoCodes />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="settings" element={<AdminStoreSettings />} />
       </Route>
     </Routes>
   );

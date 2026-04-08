@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Mail, Users, Download } from 'lucide-react';
+import { Mail, Users, Download, Trash2 } from 'lucide-react';
+import { api } from '@/api/client';
+import { toast } from 'sonner';
 
 export default function AdminSubscribers() {
   const [subscribers, setSubscribers] = useState([]);
@@ -35,6 +37,22 @@ export default function AdminSubscribers() {
     a.download = 'subscribers.csv';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const [deletingId, setDeletingId] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!confirm('Remove this subscriber?')) return;
+    setDeletingId(id);
+    try {
+      await api.subscribers.delete(id);
+      setSubscribers(prev => prev.filter(s => s.id !== id));
+      toast.success('Subscriber removed');
+    } catch {
+      toast.error('Failed to remove subscriber');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const newsletterCount = subscribers.filter(s => s.source === 'newsletter').length;
@@ -119,6 +137,7 @@ export default function AdminSubscribers() {
                 <th className="px-4 py-3 text-left font-bold tracking-wider text-[10px] text-muted-foreground">EMAIL</th>
                 <th className="px-4 py-3 text-left font-bold tracking-wider text-[10px] text-muted-foreground">SOURCE</th>
                 <th className="px-4 py-3 text-left font-bold tracking-wider text-[10px] text-muted-foreground">JOINED</th>
+                <th className="px-4 py-3 text-right font-bold tracking-wider text-[10px] text-muted-foreground"></th>
               </tr>
             </thead>
             <tbody>
@@ -136,6 +155,16 @@ export default function AdminSubscribers() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{new Date(s.created_date).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => handleDelete(s.id)}
+                      disabled={deletingId === s.id}
+                      className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors disabled:opacity-50"
+                      title="Remove subscriber"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
