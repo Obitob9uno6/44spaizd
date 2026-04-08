@@ -217,7 +217,7 @@ export default function ProductDetail() {
                 }`}
                 title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
               >
-                <CannabisLeaf className={`w-4 h-4 ${wishlisted ? 'fill-primary' : ''}`} />
+                <CannabisLeaf className="w-4 h-4" active={wishlisted} />
               </button>
             </div>
 

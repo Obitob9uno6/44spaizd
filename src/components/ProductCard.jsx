@@ -68,9 +68,8 @@ export default function ProductCard({ product, index = 0 }) {
               }`}
             >
               <CannabisLeaf
-                className={`w-3.5 h-3.5 transition-colors ${
-                  wishlisted ? 'fill-primary text-primary' : 'text-foreground'
-                }`}
+                className="w-3.5 h-3.5 transition-all"
+                active={wishlisted}
               />
             </button>
 
