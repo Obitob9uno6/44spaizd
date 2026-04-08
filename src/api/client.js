@@ -5,7 +5,7 @@ async function request(method, path, body) {
     method,
     headers: { 'Content-Type': 'application/json' },
   };
-  const token = localStorage.getItem('spaizd_user_token');
+  const token = sessionStorage.getItem('spaizd_admin_token') || localStorage.getItem('spaizd_user_token');
   if (token) opts.headers['Authorization'] = `Bearer ${token}`;
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${path}`, opts);

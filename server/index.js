@@ -590,12 +590,18 @@ app.post('/api/settings', adminAuthMiddleware, async (req, res) => {
   try {
     const { key, value } = req.body;
     if (!key?.trim()) return res.status(400).json({ error: 'key is required' });
+    const safeValue = value ?? '';
+    // Validate ISO date format for time-based settings
+    if (key.trim() === 'next_drop_at' && safeValue !== '') {
+      const ts = new Date(safeValue).getTime();
+      if (isNaN(ts)) return res.status(400).json({ error: 'next_drop_at must be a valid ISO date string' });
+    }
     await pool.query(
       `INSERT INTO settings (key, value, updated_date) VALUES ($1, $2, NOW())
        ON CONFLICT (key) DO UPDATE SET value = $2, updated_date = NOW()`,
-      [key.trim(), value ?? '']
+      [key.trim(), safeValue]
     );
-    res.json({ success: true, key: key.trim(), value: value ?? '' });
+    res.json({ success: true, key: key.trim(), value: safeValue });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to save setting' });
