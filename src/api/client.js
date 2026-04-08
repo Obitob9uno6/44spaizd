@@ -5,7 +5,23 @@ async function request(method, path, body) {
     method,
     headers: { 'Content-Type': 'application/json' },
   };
-  const token = sessionStorage.getItem('spaizd_admin_token') || localStorage.getItem('spaizd_user_token');
+  const token = localStorage.getItem('spaizd_user_token');
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const res = await fetch(`${BASE_URL}${path}`, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw Object.assign(new Error(err.error || 'Request failed'), { status: res.status });
+  }
+  return res.json();
+}
+
+async function adminRequest(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  const token = sessionStorage.getItem('spaizd_admin_token');
   if (token) opts.headers['Authorization'] = `Bearer ${token}`;
   if (body !== undefined) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE_URL}${path}`, opts);
@@ -65,6 +81,6 @@ export const api = {
   settings: {
     get: (key) => request('GET', `/settings?key=${encodeURIComponent(key)}`),
     getAll: () => request('GET', '/settings'),
-    set: (key, value) => request('POST', '/settings', { key, value }),
+    set: (key, value) => adminRequest('POST', '/settings', { key, value }),
   },
 };
