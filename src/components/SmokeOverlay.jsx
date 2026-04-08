@@ -1,46 +1,128 @@
+import { useEffect, useRef } from 'react';
+
 export default function SmokeOverlay() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COLORS = [
+      { r: 100, g: 160, b: 80 },
+      { r: 130, g: 80, b: 180 },
+      { r: 60, g: 140, b: 60 },
+      { r: 120, g: 60, b: 200 },
+      { r: 90, g: 150, b: 75 },
+    ];
+
+    const COUNT = 18;
+
+    function createParticle() {
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      return {
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: 80 + Math.random() * 200,
+        color,
+        alpha: 0,
+        maxAlpha: 0.03 + Math.random() * 0.06,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.2,
+        driftX: (Math.random() - 0.5) * 0.008,
+        driftY: (Math.random() - 0.5) * 0.006,
+        phase: Math.random() * Math.PI * 2,
+        phaseSpeed: 0.003 + Math.random() * 0.005,
+        growSpeed: 0.0003 + Math.random() * 0.0005,
+        life: 0,
+        maxLife: 600 + Math.random() * 800,
+      };
+    }
+
+    for (let i = 0; i < COUNT; i++) {
+      const p = createParticle();
+      p.life = Math.random() * p.maxLife;
+      particles.push(p);
+    }
+
+    let scrollY = window.scrollY;
+    let lastScrollY = scrollY;
+    const onScroll = () => { scrollY = window.scrollY; };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const scrollDelta = scrollY - lastScrollY;
+      lastScrollY += (scrollY - lastScrollY) * 0.1;
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life++;
+
+        const lifeRatio = p.life / p.maxLife;
+        if (lifeRatio < 0.15) {
+          p.alpha = (lifeRatio / 0.15) * p.maxAlpha;
+        } else if (lifeRatio > 0.8) {
+          p.alpha = ((1 - lifeRatio) / 0.2) * p.maxAlpha;
+        } else {
+          p.alpha = p.maxAlpha;
+        }
+
+        p.phase += p.phaseSpeed;
+        p.vx += p.driftX + Math.sin(p.phase) * 0.01;
+        p.vy += p.driftY + Math.cos(p.phase * 0.7) * 0.008;
+        p.vx *= 0.995;
+        p.vy *= 0.995;
+        p.x += p.vx;
+        p.y += p.vy - scrollDelta * 0.15;
+        p.radius += p.growSpeed;
+
+        if (p.x < -p.radius) p.x = canvas.width + p.radius;
+        if (p.x > canvas.width + p.radius) p.x = -p.radius;
+        if (p.y < -p.radius) p.y = canvas.height + p.radius;
+        if (p.y > canvas.height + p.radius) p.y = -p.radius;
+
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
+        gradient.addColorStop(0, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha})`);
+        gradient.addColorStop(0.5, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${p.alpha * 0.4})`);
+        gradient.addColorStop(1, `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, 0)`);
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (p.life >= p.maxLife) {
+          particles[i] = createParticle();
+        }
+      }
+
+      animId = requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[5] pointer-events-none overflow-hidden">
-      {/* Smoke blob 1 - bottom left */}
-      <div
-        className="smoke-1 absolute bottom-0 left-[15%] w-64 h-64 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(100,160,80,0.12) 0%, rgba(130,80,180,0.06) 50%, transparent 70%)',
-          filter: 'blur(40px)',
-        }}
-      />
-      {/* Smoke blob 2 - bottom right */}
-      <div
-        className="smoke-2 absolute bottom-0 right-[20%] w-80 h-80 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(120,80,180,0.1) 0%, rgba(80,140,70,0.05) 50%, transparent 70%)',
-          filter: 'blur(50px)',
-        }}
-      />
-      {/* Smoke blob 3 - center */}
-      <div
-        className="smoke-3 absolute bottom-[10%] left-[45%] w-96 h-96 rounded-full"
-        style={{
-          background: 'radial-gradient(circle, rgba(90,150,75,0.08) 0%, rgba(110,60,160,0.05) 60%, transparent 75%)',
-          filter: 'blur(60px)',
-        }}
-      />
-      {/* Static ambient purple glow top */}
-      <div
-        className="absolute top-0 right-0 w-[600px] h-[400px] rounded-full opacity-10"
-        style={{
-          background: 'radial-gradient(circle, rgba(120,60,200,0.3) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-        }}
-      />
-      {/* Static ambient green glow bottom left */}
-      <div
-        className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-10"
-        style={{
-          background: 'radial-gradient(circle, rgba(60,140,60,0.3) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-        }}
-      />
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 z-[5] pointer-events-none"
+      style={{ opacity: 0.9 }}
+    />
   );
 }
