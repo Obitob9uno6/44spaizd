@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCart, getCartTotal, clearCart } from '../lib/cartStore';
 import { api } from '@/api/client';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Lock } from 'lucide-react';
+import { ChevronLeft, Lock, Tag, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -24,7 +24,90 @@ const CARD_STYLE = {
   },
 };
 
-function CheckoutForm({ cart, total, shipping }) {
+function PromoCodeInput({ onApply, appliedPromo }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const [applying, setApplying] = useState(false);
+  const [promoError, setPromoError] = useState('');
+
+  const handleApply = async () => {
+    if (!code.trim()) return;
+    setPromoError('');
+    setApplying(true);
+    try {
+      const result = await api.promoCodes.validate(code.trim());
+      onApply(result);
+      setCode('');
+      toast.success(`Promo code ${result.code} applied!`);
+    } catch (err) {
+      setPromoError(err.message || 'Invalid promo code');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const handleRemove = () => {
+    onApply(null);
+    setCode('');
+    setPromoError('');
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen(s => !s)}
+        className="flex items-center gap-2 text-[10px] text-muted-foreground tracking-wider hover:text-foreground transition-colors"
+      >
+        <Tag className="w-3 h-3" />
+        PROMO CODE
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+      </button>
+
+      {open && (
+        <div className="mt-3">
+          {appliedPromo ? (
+            <div className="flex items-center justify-between bg-primary/10 border border-primary/20 px-3 py-2">
+              <div>
+                <span className="text-xs font-bold tracking-widest text-primary">{appliedPromo.code}</span>
+                <span className="text-[10px] text-muted-foreground ml-2">
+                  {appliedPromo.type === 'percent'
+                    ? `${appliedPromo.value}% off`
+                    : `$${appliedPromo.value.toFixed(2)} off`}
+                </span>
+              </div>
+              <button type="button" onClick={handleRemove} className="text-muted-foreground hover:text-destructive transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={code}
+                onChange={e => { setCode(e.target.value.toUpperCase()); setPromoError(''); }}
+                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApply())}
+                placeholder="ENTER CODE"
+                className="flex-1 bg-secondary border border-border px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary tracking-widest transition-colors"
+              />
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={applying || !code.trim()}
+                className="bg-foreground text-background px-4 py-2 text-[10px] font-bold tracking-widest hover:bg-foreground/80 transition-colors disabled:opacity-50"
+              >
+                {applying ? '...' : 'APPLY'}
+              </button>
+            </div>
+          )}
+          {promoError && <p className="text-[10px] text-destructive mt-1">{promoError}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CheckoutForm({ cart, subtotal, shipping, discount, appliedPromo, onApplyPromo }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -32,6 +115,8 @@ function CheckoutForm({ cart, total, shipping }) {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [cardError, setCardError] = useState(null);
+
+  const finalTotal = Math.max(0, subtotal - discount) + shipping;
 
   const validate = () => {
     const e = {};
@@ -58,7 +143,7 @@ function CheckoutForm({ cart, total, shipping }) {
 
     setSubmitting(true);
     try {
-      const amountInCents = Math.round((total + shipping) * 100);
+      const amountInCents = Math.round(finalTotal * 100);
       const { clientSecret } = await api.payments.createIntent({
         amount: amountInCents,
         currency: 'usd',
@@ -97,12 +182,14 @@ function CheckoutForm({ cart, total, shipping }) {
             price: item.price,
             image: item.image,
           })),
-          subtotal: total,
+          subtotal,
           shipping,
-          total: total + shipping,
+          total: finalTotal,
           status: 'paid',
           shipping_address: form,
           payment_intent_id: paymentIntent.id,
+          promo_code: appliedPromo?.code || null,
+          discount,
         });
         clearCart();
         toast.success('Payment successful! Order placed.');
@@ -161,6 +248,8 @@ function CheckoutForm({ cart, total, shipping }) {
         </div>
       </div>
 
+      <PromoCodeInput appliedPromo={appliedPromo} onApply={onApplyPromo} />
+
       <div>
         <span className="text-[10px] text-muted-foreground tracking-widest mb-4 block">PAYMENT</span>
         <div className="bg-secondary border border-border px-4 py-3.5">
@@ -178,17 +267,19 @@ function CheckoutForm({ cart, total, shipping }) {
         disabled={submitting || !stripe}
         className="w-full bg-primary text-primary-foreground py-4 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors disabled:opacity-50"
       >
-        {submitting ? 'PROCESSING...' : `PAY $${(total + shipping).toFixed(2)}`}
+        {submitting ? 'PROCESSING...' : `PAY $${finalTotal.toFixed(2)}`}
       </button>
     </motion.form>
   );
 }
 
-function NoStripeCheckoutForm({ cart, total, shipping }) {
+function NoStripeCheckoutForm({ cart, subtotal, shipping, discount, appliedPromo, onApplyPromo }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', address: '', city: '', state: '', zip: '', country: 'US' });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  const finalTotal = Math.max(0, subtotal - discount) + shipping;
 
   const validate = () => {
     const e = {};
@@ -217,11 +308,13 @@ function NoStripeCheckoutForm({ cart, total, shipping }) {
           price: item.price,
           image: item.image,
         })),
-        subtotal: total,
+        subtotal,
         shipping,
-        total: total + shipping,
+        total: finalTotal,
         status: 'pending',
         shipping_address: form,
+        promo_code: appliedPromo?.code || null,
+        discount,
       });
       clearCart();
       toast.success('Order placed successfully!');
@@ -279,6 +372,8 @@ function NoStripeCheckoutForm({ cart, total, shipping }) {
         </div>
       </div>
 
+      <PromoCodeInput appliedPromo={appliedPromo} onApply={onApplyPromo} />
+
       <div className="border border-dashed border-border p-4 text-center">
         <p className="text-[10px] text-muted-foreground tracking-wider">STRIPE PAYMENT NOT CONFIGURED</p>
         <p className="text-[9px] text-muted-foreground mt-1">Connect Stripe to enable card payments</p>
@@ -297,12 +392,21 @@ function NoStripeCheckoutForm({ cart, total, shipping }) {
 
 export default function Checkout() {
   const [cart, setCart] = useState([]);
+  const [appliedPromo, setAppliedPromo] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => { setCart(getCart()); }, []);
 
-  const total = getCartTotal(cart);
-  const shipping = total >= 150 ? 0 : 12;
+  const subtotal = getCartTotal(cart);
+  const shipping = subtotal >= 150 ? 0 : 12;
+
+  const discount = appliedPromo
+    ? appliedPromo.type === 'percent'
+      ? Math.min(subtotal * (appliedPromo.value / 100), subtotal)
+      : Math.min(appliedPromo.value, subtotal)
+    : 0;
+
+  const finalTotal = Math.max(0, subtotal - discount) + shipping;
 
   if (cart.length === 0) {
     return (
@@ -314,6 +418,15 @@ export default function Checkout() {
       </div>
     );
   }
+
+  const formProps = {
+    cart,
+    subtotal,
+    shipping,
+    discount,
+    appliedPromo,
+    onApplyPromo: setAppliedPromo,
+  };
 
   return (
     <div className="pt-16 min-h-screen">
@@ -330,12 +443,13 @@ export default function Checkout() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
           {stripePromise ? (
             <Elements stripe={stripePromise}>
-              <CheckoutForm cart={cart} total={total} shipping={shipping} />
+              <CheckoutForm {...formProps} />
             </Elements>
           ) : (
-            <NoStripeCheckoutForm cart={cart} total={total} shipping={shipping} />
+            <NoStripeCheckoutForm {...formProps} />
           )}
 
+          {/* Order Summary */}
           <div className="lg:col-span-2">
             <span className="text-[10px] text-muted-foreground tracking-widest mb-4 block">ORDER SUMMARY</span>
             <div className="space-y-3">
@@ -352,13 +466,22 @@ export default function Checkout() {
             </div>
             <div className="border-t border-border mt-6 pt-4 space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>SUBTOTAL</span><span>${total.toFixed(2)}</span>
+                <span>SUBTOTAL</span><span>${subtotal.toFixed(2)}</span>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-xs text-primary">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    {appliedPromo?.code}
+                  </span>
+                  <span>−${discount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>SHIPPING</span><span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-sm font-bold pt-2 border-t border-border">
-                <span>TOTAL</span><span>${(total + shipping).toFixed(2)}</span>
+                <span>TOTAL</span><span>${finalTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>

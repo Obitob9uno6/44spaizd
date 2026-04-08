@@ -505,13 +505,14 @@ app.get('/api/orders', async (req, res) => {
 
 app.post('/api/orders', optionalAuth, async (req, res) => {
   try {
-    const { items, subtotal, shipping, total, status, shipping_address, payment_intent_id } = req.body;
+    const { items, subtotal, shipping, total, status, shipping_address, payment_intent_id, promo_code, discount } = req.body;
     const userId = req.user?.userId || null;
     const result = await pool.query(
-      `INSERT INTO orders (items, subtotal, shipping, total, status, shipping_address, user_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      `INSERT INTO orders (items, subtotal, shipping, total, status, shipping_address, user_id, promo_code, discount)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
       [JSON.stringify(items || []), subtotal || 0, shipping || 0,
-       total || 0, status || 'pending', JSON.stringify(shipping_address || {}), userId]
+       total || 0, status || 'pending', JSON.stringify(shipping_address || {}), userId,
+       promo_code || null, discount || 0]
     );
 
     if (items && items.length > 0) {
@@ -523,6 +524,13 @@ app.post('/api/orders', optionalAuth, async (req, res) => {
           );
         }
       }
+    }
+
+    if (promo_code) {
+      await pool.query(
+        `UPDATE promo_codes SET uses_count = uses_count + 1 WHERE UPPER(code) = UPPER($1)`,
+        [promo_code]
+      );
     }
 
     const order = result.rows[0];
@@ -595,6 +603,92 @@ app.delete('/api/orders/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to delete order' });
+  }
+});
+
+// ── Promo Codes ───────────────────────────────────────────
+// Admin: list all promo codes
+app.get('/api/promo-codes', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM promo_codes ORDER BY created_date DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch promo codes' });
+  }
+});
+
+// Admin: create a promo code
+app.post('/api/promo-codes', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { code, type, value, expires_at, max_uses } = req.body;
+    if (!code?.trim()) return res.status(400).json({ error: 'code is required' });
+    if (!['percent', 'flat'].includes(type)) return res.status(400).json({ error: 'type must be percent or flat' });
+    const numVal = parseFloat(value);
+    if (isNaN(numVal) || numVal <= 0) return res.status(400).json({ error: 'value must be a positive number' });
+    if (type === 'percent' && numVal > 100) return res.status(400).json({ error: 'percent discount cannot exceed 100' });
+
+    const result = await pool.query(
+      `INSERT INTO promo_codes (code, type, value, expires_at, max_uses)
+       VALUES (UPPER($1), $2, $3, $4, $5) RETURNING *`,
+      [code.trim(), type, numVal, expires_at || null, max_uses ? parseInt(max_uses) : null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Promo code already exists' });
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create promo code' });
+  }
+});
+
+// Admin: toggle active status of a promo code
+app.patch('/api/promo-codes/:id/toggle', adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'UPDATE promo_codes SET is_active = NOT is_active WHERE id = $1 RETURNING *',
+      [req.params.id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Promo code not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to toggle promo code' });
+  }
+});
+
+// Admin: delete a promo code
+app.delete('/api/promo-codes/:id', adminAuthMiddleware, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM promo_codes WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete promo code' });
+  }
+});
+
+// Public: validate a promo code (does not increment uses_count)
+app.post('/api/promo-codes/validate', async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code?.trim()) return res.status(400).json({ error: 'code is required' });
+    const result = await pool.query(
+      'SELECT * FROM promo_codes WHERE UPPER(code) = UPPER($1)',
+      [code.trim()]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Invalid promo code' });
+    const promo = result.rows[0];
+    if (!promo.is_active) return res.status(400).json({ error: 'This promo code is no longer active' });
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'This promo code has expired' });
+    }
+    if (promo.max_uses !== null && promo.uses_count >= promo.max_uses) {
+      return res.status(400).json({ error: 'This promo code has reached its usage limit' });
+    }
+    res.json({ code: promo.code, type: promo.type, value: parseFloat(promo.value) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to validate promo code' });
   }
 });
 
@@ -697,6 +791,25 @@ async function initDb() {
       ALTER TABLE reviews ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT true
     `);
     console.log('[db] reviews.approved column ready');
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS promo_codes (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(50) NOT NULL UNIQUE,
+        type VARCHAR(10) NOT NULL CHECK (type IN ('percent', 'flat')),
+        value NUMERIC(10,2) NOT NULL,
+        expires_at TIMESTAMP,
+        max_uses INTEGER,
+        uses_count INTEGER NOT NULL DEFAULT 0,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_date TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    console.log('[db] promo_codes table ready');
+
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code VARCHAR(50)`);
+    await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount NUMERIC(10,2) NOT NULL DEFAULT 0`);
+    console.log('[db] orders.promo_code and discount columns ready');
   } catch (err) {
     console.error('[db] init error:', err.message);
   }

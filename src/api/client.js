@@ -86,4 +86,11 @@ export const api = {
     getAll: () => request('GET', '/settings'),
     set: (key, value) => adminRequest('POST', '/settings', { key, value }),
   },
+  promoCodes: {
+    list: () => adminRequest('GET', '/promo-codes'),
+    create: (data) => adminRequest('POST', '/promo-codes', data),
+    toggle: (id) => adminRequest('PATCH', `/promo-codes/${id}/toggle`),
+    delete: (id) => adminRequest('DELETE', `/promo-codes/${id}`),
+    validate: (code) => request('POST', '/promo-codes/validate', { code }),
+  },
 };
