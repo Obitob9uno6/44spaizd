@@ -504,21 +504,64 @@ app.get('/api/orders', async (req, res) => {
 });
 
 app.post('/api/orders', optionalAuth, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { items, subtotal, shipping, total, status, shipping_address, payment_intent_id, promo_code, discount } = req.body;
+    await client.query('BEGIN');
+
+    const { items, subtotal, shipping, status, shipping_address, payment_intent_id, promo_code } = req.body;
     const userId = req.user?.userId || null;
-    const result = await pool.query(
+
+    // Server-side compute subtotal from items (authoritative)
+    const serverSubtotal = (items || []).reduce((sum, i) => sum + (parseFloat(i.price) || 0) * (parseInt(i.quantity) || 0), 0);
+    const serverShipping = serverSubtotal >= 150 ? 0 : 12;
+
+    // Server-side promo validation & discount computation
+    let appliedCode = null;
+    let serverDiscount = 0;
+    if (promo_code) {
+      const promoResult = await client.query(
+        'SELECT * FROM promo_codes WHERE UPPER(code) = UPPER($1)',
+        [promo_code]
+      );
+      if (promoResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Invalid promo code' });
+      }
+      const promo = promoResult.rows[0];
+      if (!promo.is_active) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'This promo code is no longer active' });
+      }
+      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'This promo code has expired' });
+      }
+      if (promo.max_uses !== null && promo.uses_count >= promo.max_uses) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'This promo code has reached its usage limit' });
+      }
+      appliedCode = promo.code;
+      if (promo.type === 'percent') {
+        serverDiscount = Math.min(serverSubtotal * (parseFloat(promo.value) / 100), serverSubtotal);
+      } else {
+        serverDiscount = Math.min(parseFloat(promo.value), serverSubtotal);
+      }
+    }
+
+    const serverTotal = Math.max(0, serverSubtotal - serverDiscount) + serverShipping;
+
+    const result = await client.query(
       `INSERT INTO orders (items, subtotal, shipping, total, status, shipping_address, user_id, promo_code, discount)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [JSON.stringify(items || []), subtotal || 0, shipping || 0,
-       total || 0, status || 'pending', JSON.stringify(shipping_address || {}), userId,
-       promo_code || null, discount || 0]
+      [JSON.stringify(items || []), serverSubtotal, serverShipping,
+       serverTotal, status || 'pending', JSON.stringify(shipping_address || {}), userId,
+       appliedCode, serverDiscount]
     );
 
     if (items && items.length > 0) {
       for (const item of items) {
         if (item.product_id && item.quantity) {
-          await pool.query(
+          await client.query(
             `UPDATE products SET stock = GREATEST(stock - $1, 0), updated_date = NOW() WHERE id = $2`,
             [parseInt(item.quantity), item.product_id]
           );
@@ -526,12 +569,14 @@ app.post('/api/orders', optionalAuth, async (req, res) => {
       }
     }
 
-    if (promo_code) {
-      await pool.query(
+    if (appliedCode) {
+      await client.query(
         `UPDATE promo_codes SET uses_count = uses_count + 1 WHERE UPPER(code) = UPPER($1)`,
-        [promo_code]
+        [appliedCode]
       );
     }
+
+    await client.query('COMMIT');
 
     const order = result.rows[0];
     const addr = typeof shipping_address === 'string' ? JSON.parse(shipping_address) : (shipping_address || {});
@@ -539,8 +584,11 @@ app.post('/api/orders', optionalAuth, async (req, res) => {
 
     res.status(201).json(order);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: 'Failed to create order' });
+  } finally {
+    client.release();
   }
 });
 
