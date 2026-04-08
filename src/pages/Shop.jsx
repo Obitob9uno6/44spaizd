@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { api } from '@/api/client';
 import { motion } from 'framer-motion';
-import { Search, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 
 const CATEGORIES = [
@@ -26,6 +26,9 @@ export default function Shop() {
   const [category, setCategory] = useState('');
   const [sort, setSort] = useState('-created_date');
   const [query, setQuery] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [showPriceFilter, setShowPriceFilter] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -57,10 +60,16 @@ export default function Shop() {
         p.sku?.toLowerCase().includes(q)
       );
     }
+    const min = parseFloat(minPrice);
+    const max = parseFloat(maxPrice);
+    if (!isNaN(min)) list = list.filter(p => parseFloat(p.price) >= min);
+    if (!isNaN(max)) list = list.filter(p => parseFloat(p.price) <= max);
     return list;
-  }, [allProducts, category, query]);
+  }, [allProducts, category, query, minPrice, maxPrice]);
 
+  const hasPriceFilter = minPrice !== '' || maxPrice !== '';
   const clearSearch = () => setQuery('');
+  const clearPriceFilter = () => { setMinPrice(''); setMaxPrice(''); };
 
   return (
     <div className="pt-16">
@@ -106,31 +115,87 @@ export default function Shop() {
       {/* Filters */}
       <div className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map(cat => (
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat.value}
+                    onClick={() => setCategory(cat.value)}
+                    className={`px-3 py-1.5 text-[10px] font-bold tracking-widest transition-colors border ${
+                      category === cat.value
+                        ? 'border-primary text-primary'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  key={cat.value}
-                  onClick={() => setCategory(cat.value)}
-                  className={`px-3 py-1.5 text-[10px] font-bold tracking-widest transition-colors border ${
-                    category === cat.value
+                  onClick={() => setShowPriceFilter(s => !s)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold tracking-widest border transition-colors ${
+                    showPriceFilter || hasPriceFilter
                       ? 'border-primary text-primary'
                       : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground'
                   }`}
                 >
-                  {cat.label}
+                  <SlidersHorizontal className="w-3 h-3" />
+                  PRICE
+                  {hasPriceFilter && <span className="w-1.5 h-1.5 bg-primary rounded-full" />}
                 </button>
-              ))}
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="bg-secondary border border-border px-3 py-1.5 text-[10px] font-bold tracking-wider text-foreground focus:outline-none focus:border-primary cursor-pointer"
+                >
+                  {SORT_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="bg-secondary border border-border px-3 py-1.5 text-[10px] font-bold tracking-wider text-foreground focus:outline-none focus:border-primary cursor-pointer"
-            >
-              {SORT_OPTIONS.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+
+            {/* Price range filter */}
+            {showPriceFilter && (
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="text-[10px] text-muted-foreground tracking-wider">PRICE RANGE</span>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">$</span>
+                    <input
+                      type="number"
+                      value={minPrice}
+                      onChange={e => setMinPrice(e.target.value)}
+                      placeholder="MIN"
+                      min="0"
+                      className="w-24 bg-background border border-border pl-5 pr-2 py-1.5 text-[10px] tracking-wider text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">—</span>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">$</span>
+                    <input
+                      type="number"
+                      value={maxPrice}
+                      onChange={e => setMaxPrice(e.target.value)}
+                      placeholder="MAX"
+                      min="0"
+                      className="w-24 bg-background border border-border pl-5 pr-2 py-1.5 text-[10px] tracking-wider text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  {hasPriceFilter && (
+                    <button
+                      onClick={clearPriceFilter}
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X className="w-3 h-3" /> CLEAR
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

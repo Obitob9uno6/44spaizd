@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Package } from 'lucide-react';
+import { Menu, X, User, LogOut, Package, Heart } from 'lucide-react';
 import { Scissors } from 'lucide-react';
 import { getCart, getCartCount } from '../lib/cartStore';
+import { getWishlist } from '../lib/wishlistStore';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 
 export default function Navbar({ onCartOpen }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [snipping, setSnipping] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -27,6 +29,13 @@ export default function Navbar({ onCartOpen }) {
     updateCart();
     window.addEventListener('cart-update', updateCart);
     return () => window.removeEventListener('cart-update', updateCart);
+  }, []);
+
+  useEffect(() => {
+    const updateWishlist = () => setWishlistCount(getWishlist().length);
+    updateWishlist();
+    window.addEventListener('wishlist-update', updateWishlist);
+    return () => window.removeEventListener('wishlist-update', updateWishlist);
   }, []);
 
   useEffect(() => {
@@ -76,6 +85,19 @@ export default function Navbar({ onCartOpen }) {
             </div>
 
             <div className="flex items-center gap-3">
+              <Link
+                to="/wishlist"
+                className="relative p-2 text-foreground hover:text-primary transition-colors"
+                title="Wishlist"
+              >
+                <Heart className={`w-5 h-5 transition-colors ${wishlistCount > 0 ? 'fill-primary text-primary' : ''}`} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
               <button
                 onClick={handleCartClick}
                 className="relative p-2 text-foreground hover:text-primary transition-colors flex items-center gap-1.5"
