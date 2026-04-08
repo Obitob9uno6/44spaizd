@@ -1,12 +1,51 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Package } from 'lucide-react';
+import { Menu, X, User, LogOut, Package, ChevronDown } from 'lucide-react';
 import CannabisLeaf from './icons/CannabisLeaf';
 import { Scissors } from 'lucide-react';
 import { getCart, getCartCount } from '../lib/cartStore';
 import { getWishlist } from '../lib/wishlistStore';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
+
+function DropdownMenu({ label, items, closeMenu }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1 text-xs font-medium tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {label}
+        <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-2 w-40 bg-background border border-border shadow-lg z-50">
+          {items.map(item => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => { setOpen(false); if (closeMenu) closeMenu(); }}
+              className="block px-4 py-2.5 text-[10px] tracking-wider text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Navbar({ onCartOpen }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,6 +54,8 @@ export default function Navbar({ onCartOpen }) {
   const [scrolled, setScrolled] = useState(false);
   const [snipping, setSnipping] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const [mobileDropsOpen, setMobileDropsOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -48,6 +89,8 @@ export default function Navbar({ onCartOpen }) {
   useEffect(() => {
     setMenuOpen(false);
     setUserMenuOpen(false);
+    setMobileShopOpen(false);
+    setMobileDropsOpen(false);
   }, [location]);
 
   const handleLogout = () => {
@@ -56,12 +99,15 @@ export default function Navbar({ onCartOpen }) {
     setUserMenuOpen(false);
   };
 
-  const navLinks = [
-    { path: '/shop', label: 'SHOP' },
+  const shopItems = [
     { path: '/shop?category=tees', label: 'TEES' },
     { path: '/shop?category=hoodies', label: 'HOODIES' },
     { path: '/shop?category=outerwear', label: 'OUTERWEAR' },
-    { path: '/vip', label: 'VIP CLUB' },
+  ];
+
+  const dropsItems = [
+    { path: '/drops?tab=upcoming', label: 'UPCOMING' },
+    { path: '/drops?tab=out-now', label: 'OUT NOW' },
   ];
 
   return (
@@ -74,15 +120,20 @@ export default function Navbar({ onCartOpen }) {
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map(link => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="text-xs font-medium tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <DropdownMenu label="SHOP" items={shopItems} />
+              <DropdownMenu label="DROPS" items={dropsItems} />
+              <Link
+                to="/vip"
+                className="text-xs font-medium tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+              >
+                VIP CLUB
+              </Link>
+              <Link
+                to="/about"
+                className="text-xs font-medium tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ABOUT
+              </Link>
             </div>
 
             <div className="flex items-center gap-3">
@@ -170,16 +221,67 @@ export default function Navbar({ onCartOpen }) {
       </nav>
 
       {menuOpen && (
-        <div className="fixed inset-0 z-40 bg-background flex flex-col items-center justify-center gap-8">
-          {navLinks.map(link => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className="text-2xl font-bold tracking-widest text-foreground hover:text-primary transition-colors"
+        <div className="fixed inset-0 z-40 bg-background flex flex-col items-center justify-center gap-6 pt-16">
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => setMobileShopOpen(!mobileShopOpen)}
+              className="flex items-center gap-2 text-2xl font-bold tracking-widest text-foreground"
             >
-              {link.label}
-            </Link>
-          ))}
+              SHOP
+              <ChevronDown className={`w-5 h-5 transition-transform ${mobileShopOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {mobileShopOpen && (
+              <div className="flex flex-col items-center gap-3 mt-2">
+                {shopItems.map(item => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="text-sm tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => setMobileDropsOpen(!mobileDropsOpen)}
+              className="flex items-center gap-2 text-2xl font-bold tracking-widest text-foreground"
+            >
+              DROPS
+              <ChevronDown className={`w-5 h-5 transition-transform ${mobileDropsOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {mobileDropsOpen && (
+              <div className="flex flex-col items-center gap-3 mt-2">
+                {dropsItems.map(item => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="text-sm tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Link
+            to="/vip"
+            className="text-2xl font-bold tracking-widest text-foreground hover:text-primary transition-colors"
+          >
+            VIP CLUB
+          </Link>
+
+          <Link
+            to="/about"
+            className="text-2xl font-bold tracking-widest text-foreground hover:text-primary transition-colors"
+          >
+            ABOUT
+          </Link>
+
           {!isAuthenticated && (
             <button
               onClick={() => { navigate('/login'); setMenuOpen(false); }}

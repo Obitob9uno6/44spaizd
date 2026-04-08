@@ -30,6 +30,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import ShippingReturns from './pages/ShippingReturns';
 import Wishlist from './pages/Wishlist';
+import Drops from './pages/Drops';
+import About from './pages/About';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -67,6 +69,8 @@ const AuthenticatedApp = () => {
         <Route path="/order-lookup" element={<OrderLookup />} />
         <Route path="/account/orders" element={<AccountOrders />} />
         <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/drops" element={<Drops />} />
+        <Route path="/about" element={<About />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
       <Route path="/admin" element={<AdminLayout />}>
