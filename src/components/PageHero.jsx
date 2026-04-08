@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
 import weed1 from '@/../attached_assets/weed1_1775650522818.jpg';
 import weed2 from '@/../attached_assets/weed2_1775650522817.jpg';
+import weed6 from '@/../attached_assets/weed6_1775651032184.jpeg';
+import weed14 from '@/../attached_assets/weed14_1775651032185.jpg';
+import weed62 from '@/../attached_assets/weed62_1775651032173.jpg';
 
 const pageThemes = {
   shop: {
@@ -8,19 +11,19 @@ const pageThemes = {
     gradient: 'linear-gradient(to bottom, rgba(8,6,18,0.75) 0%, rgba(8,6,18,0.5) 40%, rgba(8,6,18,0.9) 100%)',
   },
   about: {
-    image: weed2,
+    image: weed6,
     gradient: 'linear-gradient(to bottom, rgba(8,6,18,0.7) 0%, rgba(8,6,18,0.45) 40%, rgba(8,6,18,0.92) 100%)',
   },
   drops: {
-    image: weed1,
+    image: weed62,
     gradient: 'linear-gradient(135deg, rgba(8,6,18,0.8) 0%, rgba(8,6,18,0.45) 50%, rgba(8,6,18,0.9) 100%)',
   },
   vip: {
-    image: weed2,
+    image: weed14,
     gradient: 'linear-gradient(160deg, rgba(8,6,18,0.78) 0%, rgba(20,10,40,0.5) 40%, rgba(8,6,18,0.92) 100%)',
   },
   wishlist: {
-    image: weed1,
+    image: weed2,
     gradient: 'linear-gradient(to bottom, rgba(8,6,18,0.8) 0%, rgba(8,6,18,0.5) 50%, rgba(8,6,18,0.92) 100%)',
   },
 };
