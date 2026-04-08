@@ -7,6 +7,16 @@ import { getCart, getCartCount } from '../lib/cartStore';
 import { getWishlist } from '../lib/wishlistStore';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
+import { api } from '@/api/client';
+
+function calcCountdown(target) {
+  const diff = Math.max(0, target - Date.now());
+  const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((diff % (1000 * 60)) / 1000);
+  return { d, h, m, s, diff };
+}
 
 function DropdownMenu({ label, items, closeMenu }) {
   const [open, setOpen] = useState(false);
@@ -56,6 +66,9 @@ export default function Navbar({ onCartOpen }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileDropsOpen, setMobileDropsOpen] = useState(false);
+  const [dropStatus, setDropStatus] = useState('loading');
+  const [countdown, setCountdown] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  const dropAtRef = useRef(null);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -92,6 +105,37 @@ export default function Navbar({ onCartOpen }) {
     setMobileShopOpen(false);
     setMobileDropsOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    api.settings.get('next_drop_at')
+      .then(({ value }) => {
+        if (!value) { setDropStatus('none'); return; }
+        const ts = new Date(value).getTime();
+        if (isNaN(ts)) { setDropStatus('none'); return; }
+        dropAtRef.current = ts;
+        const { diff } = calcCountdown(ts);
+        if (diff === 0) {
+          setDropStatus('live');
+        } else {
+          setDropStatus('counting');
+          setCountdown(calcCountdown(ts));
+        }
+      })
+      .catch(() => setDropStatus('none'));
+  }, []);
+
+  useEffect(() => {
+    if (dropStatus !== 'counting' || !dropAtRef.current) return;
+    const id = setInterval(() => {
+      const result = calcCountdown(dropAtRef.current);
+      setCountdown(result);
+      if (result.diff === 0) {
+        setDropStatus('live');
+        clearInterval(id);
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [dropStatus]);
 
   const handleLogout = () => {
     logout();
@@ -219,6 +263,41 @@ export default function Navbar({ onCartOpen }) {
           </div>
         </div>
       </nav>
+
+      {(dropStatus === 'counting' || dropStatus === 'live') && (
+        <div className="fixed top-16 left-0 right-0 z-50 bg-primary/10 border-b border-primary/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-center gap-3">
+            {dropStatus === 'live' ? (
+              <Link to="/drops?tab=out-now" className="flex items-center gap-3 group">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-green-400">
+                  DROP IS LIVE — SHOP NOW
+                </span>
+              </Link>
+            ) : (
+              <Link to="/drops?tab=upcoming" className="flex items-center gap-3 group">
+                <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-primary">NEXT DROP</span>
+                <div className="flex items-center gap-1.5">
+                  {countdown.d > 0 && (
+                    <span className="text-[11px] sm:text-xs font-bold text-foreground bg-primary/20 px-1.5 py-0.5">
+                      {String(countdown.d).padStart(2, '0')}D
+                    </span>
+                  )}
+                  <span className="text-[11px] sm:text-xs font-bold text-foreground bg-primary/20 px-1.5 py-0.5">
+                    {String(countdown.h).padStart(2, '0')}H
+                  </span>
+                  <span className="text-[11px] sm:text-xs font-bold text-foreground bg-primary/20 px-1.5 py-0.5">
+                    {String(countdown.m).padStart(2, '0')}M
+                  </span>
+                  <span className="text-[11px] sm:text-xs font-bold text-foreground bg-primary/20 px-1.5 py-0.5">
+                    {String(countdown.s).padStart(2, '0')}S
+                  </span>
+                </div>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {menuOpen && (
         <div className="fixed inset-0 z-40 bg-background flex flex-col items-center justify-center gap-6 pt-16">
