@@ -1,4 +1,4 @@
-import leafImg from '@/../attached_assets/image_1775640638603.png';
+import leafImg from '@/../attached_assets/cannabis-leaf-transparent.png';
 
 export default function CannabisLeaf({ className = '', active, ...props }) {
   const baseFilter = active
