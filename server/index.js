@@ -334,7 +334,7 @@ app.post('/api/products/:id/reviews', async (req, res) => {
   }
 });
 
-app.delete('/api/products/:productId/reviews/:reviewId', async (req, res) => {
+app.delete('/api/products/:productId/reviews/:reviewId', adminAuthMiddleware, async (req, res) => {
   try {
     await pool.query('DELETE FROM reviews WHERE id = $1 AND product_id = $2', [req.params.reviewId, req.params.productId]);
     res.json({ success: true });
