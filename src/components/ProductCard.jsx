@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import CannabisLeaf from './icons/CannabisLeaf';
 import { isWishlisted, toggleWishlist } from '@/lib/wishlistStore';
 
 export default function ProductCard({ product, index = 0 }) {
@@ -67,7 +67,7 @@ export default function ProductCard({ product, index = 0 }) {
                 wishlisted ? 'border-primary' : 'border-transparent opacity-0 group-hover:opacity-100'
               }`}
             >
-              <Heart
+              <CannabisLeaf
                 className={`w-3.5 h-3.5 transition-colors ${
                   wishlisted ? 'fill-primary text-primary' : 'text-foreground'
                 }`}

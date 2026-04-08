@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import { api } from '@/api/client';
 import { getWishlist, toggleWishlist } from '@/lib/wishlistStore';
 import { addToCart } from '@/lib/cartStore';
@@ -147,7 +148,7 @@ export default function Wishlist() {
       <div className="border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
           <div className="flex items-center gap-3 mb-1">
-            <Heart className="w-5 h-5 text-primary" />
+            <CannabisLeaf className="w-5 h-5 text-primary" />
             <span className="text-[10px] text-primary tracking-widest font-bold">SAVED ITEMS</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">WISHLIST</h1>
@@ -166,7 +167,7 @@ export default function Wishlist() {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-20">
-            <Heart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+            <CannabisLeaf className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
             <h2 className="text-sm font-bold tracking-wider mb-2">YOUR WISHLIST IS EMPTY</h2>
             <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto">
               Save items you love while browsing the shop. They'll be here waiting for you.

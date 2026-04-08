@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '@/api/client';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Minus, Plus, Heart } from 'lucide-react';
+import { ChevronLeft, Minus, Plus } from 'lucide-react';
+import CannabisLeaf from '@/components/icons/CannabisLeaf';
 import { addToCart } from '../lib/cartStore';
 import { isWishlisted, toggleWishlist } from '@/lib/wishlistStore';
 import { toast } from 'sonner';
@@ -216,7 +217,7 @@ export default function ProductDetail() {
                 }`}
                 title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
               >
-                <Heart className={`w-4 h-4 ${wishlisted ? 'fill-primary' : ''}`} />
+                <CannabisLeaf className={`w-4 h-4 ${wishlisted ? 'fill-primary' : ''}`} />
               </button>
             </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Package, Heart } from 'lucide-react';
+import { Menu, X, User, LogOut, Package } from 'lucide-react';
+import CannabisLeaf from './icons/CannabisLeaf';
 import { Scissors } from 'lucide-react';
 import { getCart, getCartCount } from '../lib/cartStore';
 import { getWishlist } from '../lib/wishlistStore';
@@ -90,7 +91,7 @@ export default function Navbar({ onCartOpen }) {
                 className="relative p-2 text-foreground hover:text-primary transition-colors"
                 title="Wishlist"
               >
-                <Heart className={`w-5 h-5 transition-colors ${wishlistCount > 0 ? 'fill-primary text-primary' : ''}`} />
+                <CannabisLeaf className={`w-5 h-5 transition-colors ${wishlistCount > 0 ? 'fill-primary text-primary' : ''}`} />
                 {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center rounded-full">
                     {wishlistCount}
