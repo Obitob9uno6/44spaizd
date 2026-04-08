@@ -10,9 +10,14 @@ export default function FeaturedCollection() {
 
   useEffect(() => {
     async function load() {
-      const all = await api.products.filter({ featured: true, is_active: true }, '-created_date', 6);
-      setProducts(all);
-      setLoading(false);
+      try {
+        const all = await api.products.filter({ featured: true, is_active: true }, '-created_date', 6);
+        setProducts(all);
+      } catch {
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);

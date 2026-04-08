@@ -85,9 +85,6 @@ export default function AdminLayout() {
             {submitting ? 'VERIFYING...' : 'ENTER'}
           </button>
         </form>
-        <p className="text-[10px] text-muted-foreground text-center mt-6">
-          Default password: <code className="bg-secondary px-1 rounded">spaizd2024</code>
-        </p>
       </div>
     </div>
   );

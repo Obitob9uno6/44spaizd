@@ -140,7 +140,7 @@ export default function AdminOrders() {
                 }`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-mono text-muted-foreground">#{order.id?.slice(0, 8).toUpperCase()}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">#{order.id}</span>
                     <span className={`text-[9px] font-bold tracking-wider px-2 py-0.5 rounded border ${statusColor(order.status)}`}>
                       {order.status?.toUpperCase()}
                     </span>

@@ -350,6 +350,18 @@ app.post('/api/orders', async (req, res) => {
       [JSON.stringify(items || []), subtotal || 0, shipping || 0,
        total || 0, status || 'pending', JSON.stringify(shipping_address || {})]
     );
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        if (item.product_id && item.quantity) {
+          await pool.query(
+            `UPDATE products SET stock = GREATEST(stock - $1, 0), updated_date = NOW() WHERE id = $2`,
+            [parseInt(item.quantity), item.product_id]
+          );
+        }
+      }
+    }
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error(err);

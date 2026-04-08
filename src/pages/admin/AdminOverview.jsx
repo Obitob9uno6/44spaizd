@@ -131,7 +131,7 @@ export default function AdminOverview() {
             <tbody>
               {orders.slice(0, 10).map(order => (
                 <tr key={order.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
-                  <td className="px-4 py-3 font-mono text-[10px] text-muted-foreground">#{order.id?.slice(0, 8).toUpperCase()}</td>
+                  <td className="px-4 py-3 font-mono text-[10px] text-muted-foreground">#{order.id}</td>
                   <td className="px-4 py-3 hidden sm:table-cell">{order.shipping_address?.name || order.shipping_address?.email || '—'}</td>
                   <td className="px-4 py-3">
                     <span className={`text-[9px] font-bold tracking-wider px-2 py-0.5 rounded ${statusColor(order.status)}`}>

@@ -43,15 +43,20 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!selectedSize) { toast.error('Please select a size'); return; }
-    addToCart({
+    const { limitReached } = addToCart({
       product_id: product.id,
       name: product.name,
       size: selectedSize,
       quantity,
       price: product.price,
       image: product.images[0],
+      stock: product.stock,
     });
-    toast.success('Added to cart');
+    if (limitReached) {
+      toast.error(`Only ${product.stock} in stock — cart updated to max`);
+    } else {
+      toast.success('Added to cart');
+    }
   };
 
   const handleWishlist = () => {

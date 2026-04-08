@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Minus, Plus, Trash2, Scissors } from 'lucide-react';
 import { getCart, removeFromCart, updateCartQuantity, getCartTotal, clearCart } from '../lib/cartStore';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function CartPanel({ isOpen, onClose }) {
   const [cart, setCart] = useState([]);
@@ -69,7 +70,14 @@ export default function CartPanel({ isOpen, onClose }) {
                         </button>
                         <span className="text-xs font-bold w-6 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => updateCartQuantity(item.product_id, item.size, item.quantity + 1)}
+                          onClick={() => {
+                            const stock = item.stock ?? Infinity;
+                            if (stock !== Infinity && item.quantity >= stock) {
+                              toast.error(`Only ${stock} in stock`);
+                              return;
+                            }
+                            updateCartQuantity(item.product_id, item.size, item.quantity + 1);
+                          }}
                           className="w-6 h-6 flex items-center justify-center border border-border text-foreground hover:border-primary transition-colors"
                         >
                           <Plus className="w-3 h-3" />

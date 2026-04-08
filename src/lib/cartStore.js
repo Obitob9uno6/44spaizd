@@ -1,4 +1,3 @@
-// Simple cart state management using localStorage
 const CART_KEY = 'spaizd_cart';
 
 export function getCart() {
@@ -9,14 +8,29 @@ export function getCart() {
 export function addToCart(item) {
   const cart = getCart();
   const existing = cart.find(i => i.product_id === item.product_id && i.size === item.size);
+  const stock = item.stock ?? Infinity;
+
   if (existing) {
-    existing.quantity += item.quantity;
+    const newQty = existing.quantity + item.quantity;
+    if (stock !== Infinity && newQty > stock) {
+      existing.quantity = stock;
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      window.dispatchEvent(new Event('cart-update'));
+      return { cart, limitReached: true };
+    }
+    existing.quantity = newQty;
+    if (item.stock !== undefined) existing.stock = item.stock;
   } else {
-    cart.push(item);
+    const capped = { ...item };
+    if (stock !== Infinity && capped.quantity > stock) {
+      capped.quantity = stock;
+    }
+    cart.push(capped);
   }
+
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
   window.dispatchEvent(new Event('cart-update'));
-  return cart;
+  return { cart, limitReached: false };
 }
 
 export function removeFromCart(product_id, size) {
@@ -31,10 +45,11 @@ export function updateCartQuantity(product_id, size, quantity) {
   const cart = getCart();
   const item = cart.find(i => i.product_id === product_id && i.size === size);
   if (item) {
-    item.quantity = quantity;
-    if (item.quantity <= 0) {
+    if (quantity <= 0) {
       return removeFromCart(product_id, size);
     }
+    const stock = item.stock ?? Infinity;
+    item.quantity = stock !== Infinity ? Math.min(quantity, stock) : quantity;
   }
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
   window.dispatchEvent(new Event('cart-update'));
