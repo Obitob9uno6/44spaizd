@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/api/client';
-import { Zap, Check, Star, Eye, EyeOff, Search } from 'lucide-react';
+import { Zap, Check, Star, Eye, EyeOff, Search, Clock, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BADGES = ['', 'NEW', 'LIMITED', 'SOLD OUT', 'POPULAR'];
@@ -13,18 +13,101 @@ const badgeColor = (b) => ({
   '': 'border-border text-muted-foreground',
 }[b] || 'border-border text-muted-foreground');
 
+function toLocalDatetimeInput(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function formatDropDate(isoString) {
+  if (!isoString) return null;
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function DropCountdown({ dropAt }) {
+  const [remaining, setRemaining] = useState('');
+
+  useEffect(() => {
+    if (!dropAt) return;
+    const tick = () => {
+      const diff = new Date(dropAt).getTime() - Date.now();
+      if (diff <= 0) {
+        setRemaining('DROP IS LIVE');
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      const pad = (n) => String(n).padStart(2, '0');
+      setRemaining(`${h}h ${pad(m)}m ${pad(s)}s remaining`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [dropAt]);
+
+  return <span className="text-[10px] text-primary font-bold">{remaining}</span>;
+}
+
 export default function AdminDrops() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(null);
   const [search, setSearch] = useState('');
 
+  const [currentDrop, setCurrentDrop] = useState(null);
+  const [dropInput, setDropInput] = useState('');
+  const [dropSaving, setDropSaving] = useState(false);
+
   useEffect(() => {
     api.products.list('-created_date', 200).then(p => {
       setProducts(p);
       setLoading(false);
     });
+
+    api.settings.get('next_drop_at')
+      .then(({ value }) => {
+        setCurrentDrop(value || null);
+        setDropInput(toLocalDatetimeInput(value));
+      })
+      .catch(() => {});
   }, []);
+
+  const saveDrop = async () => {
+    setDropSaving(true);
+    try {
+      const isoValue = dropInput ? new Date(dropInput).toISOString() : '';
+      await api.settings.set('next_drop_at', isoValue);
+      setCurrentDrop(isoValue || null);
+      if (isoValue) {
+        toast.success('Drop scheduled');
+      } else {
+        toast.success('Drop date cleared');
+      }
+    } catch {
+      toast.error('Failed to save drop date');
+    } finally {
+      setDropSaving(false);
+    }
+  };
+
+  const clearDrop = async () => {
+    setDropInput('');
+    setDropSaving(true);
+    try {
+      await api.settings.set('next_drop_at', '');
+      setCurrentDrop(null);
+      toast.success('Drop date cleared');
+    } catch {
+      toast.error('Failed to clear drop date');
+    } finally {
+      setDropSaving(false);
+    }
+  };
 
   const setBadge = async (id, badge) => {
     setSaving(id + '_badge');
@@ -78,10 +161,58 @@ export default function AdminDrops() {
         <Zap className="w-5 h-5 text-primary" />
         <h1 className="text-xl font-bold tracking-widest">DROPS MANAGER</h1>
       </div>
-      <p className="text-xs text-muted-foreground tracking-wide mb-2">
-        Control drop badges, featured placement, and visibility for your collection.
+      <p className="text-xs text-muted-foreground tracking-wide mb-6">
+        Schedule drops, control badges, featured placement, and product visibility.
       </p>
-      <div className="flex gap-3 text-[10px] text-muted-foreground mb-6">
+
+      {/* Drop Scheduler */}
+      <div className="bg-card border border-border rounded p-4 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Clock className="w-4 h-4 text-primary" />
+          <h2 className="text-xs font-bold tracking-widest">DROP SCHEDULER</h2>
+        </div>
+
+        {currentDrop && formatDropDate(currentDrop) && (
+          <div className="mb-3 flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <Calendar className="w-3 h-3" />
+              <span>Scheduled: <span className="text-foreground">{formatDropDate(currentDrop)}</span></span>
+            </div>
+            <DropCountdown dropAt={currentDrop} />
+          </div>
+        )}
+
+        {!currentDrop && (
+          <p className="text-[11px] text-muted-foreground mb-3">No drop scheduled. The hero countdown will be hidden until you set a date.</p>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="datetime-local"
+            value={dropInput}
+            onChange={e => setDropInput(e.target.value)}
+            className="flex-1 bg-secondary border border-border px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary rounded"
+          />
+          <button
+            onClick={saveDrop}
+            disabled={dropSaving}
+            className="px-4 py-2 bg-primary text-primary-foreground text-[10px] font-bold tracking-widest rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {dropSaving ? 'SAVING...' : 'SAVE DROP DATE'}
+          </button>
+          {currentDrop && (
+            <button
+              onClick={clearDrop}
+              disabled={dropSaving}
+              className="px-4 py-2 border border-border text-muted-foreground text-[10px] font-bold tracking-widest rounded hover:border-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              CLEAR
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex gap-3 text-[10px] text-muted-foreground mb-4">
         <span><span className="text-primary font-bold">{featuredCount}</span> featured</span>
         <span>·</span>
         <span><span className="text-green-400 font-bold">{activeCount}</span> active</span>

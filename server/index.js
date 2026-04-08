@@ -565,6 +565,43 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
+// ── Settings ──────────────────────────────────────────────
+// Public: get one or all settings
+app.get('/api/settings', async (req, res) => {
+  try {
+    const { key } = req.query;
+    if (key) {
+      const result = await pool.query('SELECT value FROM settings WHERE key = $1', [key]);
+      if (result.rows.length === 0) return res.json({ value: null });
+      return res.json({ value: result.rows[0].value });
+    }
+    const result = await pool.query('SELECT key, value FROM settings ORDER BY key');
+    const settings = {};
+    for (const row of result.rows) settings[row.key] = row.value;
+    res.json(settings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Admin-only: set a setting
+app.post('/api/settings', adminAuthMiddleware, async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!key?.trim()) return res.status(400).json({ error: 'key is required' });
+    await pool.query(
+      `INSERT INTO settings (key, value, updated_date) VALUES ($1, $2, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = $2, updated_date = NOW()`,
+      [key.trim(), value ?? '']
+    );
+    res.json({ success: true, key: key.trim(), value: value ?? '' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save setting' });
+  }
+});
+
 async function initDb() {
   try {
     await pool.query(`
@@ -582,6 +619,15 @@ async function initDb() {
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
     `);
     console.log('[db] orders.user_id column ready');
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key VARCHAR(100) PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_date TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    console.log('[db] settings table ready');
   } catch (err) {
     console.error('[db] init error:', err.message);
   }

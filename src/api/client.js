@@ -62,4 +62,9 @@ export const api = {
     googleLogin: (credential) => request('POST', '/auth/google', { credential }),
     me: () => request('GET', '/auth/me'),
   },
+  settings: {
+    get: (key) => request('GET', `/settings?key=${encodeURIComponent(key)}`),
+    getAll: () => request('GET', '/settings'),
+    set: (key, value) => request('POST', '/settings', { key, value }),
+  },
 };
