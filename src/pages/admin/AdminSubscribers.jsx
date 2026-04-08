@@ -4,15 +4,21 @@ import { Mail, Users, Download } from 'lucide-react';
 export default function AdminSubscribers() {
   const [subscribers, setSubscribers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     const token = sessionStorage.getItem('spaizd_admin_token') || '';
+    if (!token) { setUnauthorized(true); setLoading(false); return; }
     fetch('/api/subscribers', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r => r.json())
-      .then(data => { setSubscribers(Array.isArray(data) ? data : []); setLoading(false); })
+      .then(async r => {
+        if (r.status === 401 || r.status === 403) { setUnauthorized(true); setLoading(false); return; }
+        const data = await r.json();
+        setSubscribers(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, []);
 
@@ -33,6 +39,14 @@ export default function AdminSubscribers() {
 
   const newsletterCount = subscribers.filter(s => s.source === 'newsletter').length;
   const vipCount = subscribers.filter(s => s.source === 'vip').length;
+
+  if (unauthorized) return (
+    <div className="flex flex-col items-center justify-center py-32 text-center">
+      <Mail className="w-10 h-10 text-muted-foreground opacity-40 mb-4" />
+      <p className="text-sm font-bold tracking-wider">ACCESS REQUIRED</p>
+      <p className="text-[11px] text-muted-foreground mt-2">Please log out and log back in to refresh your session.</p>
+    </div>
+  );
 
   return (
     <div className="space-y-6">

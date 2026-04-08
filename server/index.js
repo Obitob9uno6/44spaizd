@@ -152,6 +152,10 @@ function createMailTransport() {
   return nodemailer.createTransport({ host, port, secure: port === 465, auth: { user, pass } });
 }
 
+function escHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 async function sendOrderConfirmation(order, address) {
   const transport = createMailTransport();
   if (!transport) {
@@ -163,16 +167,16 @@ async function sendOrderConfirmation(order, address) {
 
   const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
   const itemRows = items.map(i =>
-    `<tr><td style="padding:4px 8px">${i.product_name || i.name} (${i.size})</td><td style="padding:4px 8px;text-align:right">x${i.quantity}</td><td style="padding:4px 8px;text-align:right">$${(i.price * i.quantity).toFixed(2)}</td></tr>`
+    `<tr><td style="padding:4px 8px">${escHtml(i.product_name || i.name)} (${escHtml(i.size)})</td><td style="padding:4px 8px;text-align:right">x${escHtml(i.quantity)}</td><td style="padding:4px 8px;text-align:right">$${(i.price * i.quantity).toFixed(2)}</td></tr>`
   ).join('');
 
   const addr = address;
-  const addrLine = [addr.address, addr.city, addr.state, addr.zip, addr.country].filter(Boolean).join(', ');
+  const addrLine = [addr.address, addr.city, addr.state, addr.zip, addr.country].filter(Boolean).map(escHtml).join(', ');
 
   const html = `
     <div style="font-family:sans-serif;max-width:560px;margin:auto;color:#111">
       <h2 style="letter-spacing:2px;font-size:18px">ORDER CONFIRMED</h2>
-      <p style="color:#666;font-size:13px">Thanks for your order, ${addr.name || 'customer'}! Here's your summary:</p>
+      <p style="color:#666;font-size:13px">Thanks for your order, ${escHtml(addr.name) || 'customer'}! Here's your summary:</p>
       <table style="width:100%;border-collapse:collapse;font-size:13px;margin:16px 0">
         <thead><tr style="border-bottom:2px solid #eee">
           <th style="padding:4px 8px;text-align:left">Item</th>
@@ -210,7 +214,7 @@ app.post('/api/subscribers', async (req, res) => {
     if (!email?.trim()) return res.status(400).json({ error: 'Email required' });
     await pool.query(
       `INSERT INTO subscribers (email, source) VALUES ($1, $2)
-       ON CONFLICT (email) DO UPDATE SET source = EXCLUDED.source, is_active = true`,
+       ON CONFLICT (email) DO UPDATE SET is_active = true`,
       [email.trim().toLowerCase(), source]
     );
     res.json({ success: true });
