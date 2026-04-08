@@ -21,7 +21,8 @@ Starts both servers concurrently:
 
 ## Key Files
 
-- `server/index.js` — Express API server with all REST routes (auth, payments, products, orders, promo codes, settings, reviews, subscribers, users)
+- `server/index.js` — Express API server with all REST routes (auth, payments, products, orders, promo codes, settings, reviews, subscribers, users, AI chat)
+- `src/components/ChatWidget.jsx` — Floating AI customer service chatbot widget (OpenAI-powered via Replit AI Integrations)
 - `server/db.js` — PostgreSQL connection pool
 - `src/api/client.js` — Frontend API client (fetch-based, sends JWT Bearer token)
 - `src/lib/AuthContext.jsx` — React auth context with JWT stored in localStorage

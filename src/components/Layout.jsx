@@ -6,6 +6,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import CartPanel from './CartPanel';
 import AgeGate from './AgeGate';
+import ChatWidget from './ChatWidget';
 
 export default function Layout() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -25,6 +26,7 @@ export default function Layout() {
       </main>
       <Footer />
       <CartPanel isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+      <ChatWidget />
     </div>
   );
 }

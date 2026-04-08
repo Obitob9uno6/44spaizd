@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import OpenAI from 'openai';
 import pool from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -827,6 +828,103 @@ app.post('/api/settings', adminAuthMiddleware, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to save setting' });
+  }
+});
+
+// ── AI Customer Service Chat ─────────────────────────────
+const chatOpenai = new OpenAI({
+  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+});
+
+const SPAIZD_SYSTEM_PROMPT = `You are SPAIZD's friendly customer service assistant for a California cannabis-inspired streetwear brand. Your tagline is "Good Vibes, Better Fits."
+
+Key information about SPAIZD:
+- We sell cannabis-themed streetwear: tees, hoodies, and outerwear
+- Free shipping on orders over $150, otherwise $12 flat rate
+- We accept all major credit cards via Stripe
+- Returns accepted within 30 days of delivery, items must be unworn with tags
+- Orders typically ship within 2-3 business days
+- We ship within the US only
+- Customers can track orders at /order-lookup with their email and order number
+- VIP Club members get early access to drops and exclusive discounts
+- We regularly drop new collections — check the Drops page for upcoming and live releases
+- Promo codes can be applied at checkout
+
+Personality: Chill, friendly, and helpful. Keep responses concise (2-3 sentences max unless they need detailed info). Use casual language but stay professional. Never use excessive slang. You can use "vibes" occasionally.
+
+If asked about something you don't know or topics unrelated to SPAIZD (politics, other brands, etc.), politely redirect to how you can help with their SPAIZD shopping experience.
+
+Never share internal information about admin panels, passwords, database structure, or technical implementation details.`;
+
+const chatRateLimit = new Map();
+const CHAT_RATE_WINDOW = 60_000;
+const CHAT_RATE_MAX = 10;
+
+function chatRateLimiter(req, res, next) {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  const now = Date.now();
+  const record = chatRateLimit.get(ip);
+
+  if (!record || now - record.windowStart > CHAT_RATE_WINDOW) {
+    chatRateLimit.set(ip, { windowStart: now, count: 1 });
+    return next();
+  }
+
+  if (record.count >= CHAT_RATE_MAX) {
+    return res.status(429).json({ error: 'Too many messages. Please wait a moment before trying again.' });
+  }
+
+  record.count++;
+  next();
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of chatRateLimit) {
+    if (now - record.windowStart > CHAT_RATE_WINDOW * 2) chatRateLimit.delete(ip);
+  }
+}, 60_000);
+
+app.post('/api/chat', chatRateLimiter, async (req, res) => {
+  try {
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+      return res.status(503).json({ error: 'Chat service not configured' });
+    }
+
+    const chatMessages = [
+      { role: 'system', content: SPAIZD_SYSTEM_PROMPT },
+      ...messages.slice(-20).map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: String(m.content).slice(0, 2000),
+      })),
+    ];
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+
+    const response = await chatOpenai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: chatMessages,
+      max_tokens: 300,
+      temperature: 0.7,
+    }, { signal: controller.signal });
+
+    clearTimeout(timeout);
+
+    const reply = response.choices[0]?.message?.content || "Sorry, I couldn't process that. Try again!";
+    res.json({ reply });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      return res.status(504).json({ error: 'Response took too long. Please try again.' });
+    }
+    console.error('[chat] AI error:', err.message);
+    res.status(500).json({ error: 'Chat service temporarily unavailable' });
   }
 });
 
