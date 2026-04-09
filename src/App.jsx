@@ -32,6 +32,7 @@ import ShippingReturns from './pages/ShippingReturns';
 import Wishlist from './pages/Wishlist';
 import Drops from './pages/Drops';
 import About from './pages/About';
+import Connect from './pages/Connect';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -71,6 +72,7 @@ const AuthenticatedApp = () => {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/drops" element={<Drops />} />
         <Route path="/about" element={<About />} />
+        <Route path="/connect" element={<Connect />} />
         <Route path="*" element={<PageNotFound />} />
       </Route>
       <Route path="/admin" element={<AdminLayout />}>

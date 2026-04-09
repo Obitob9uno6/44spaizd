@@ -26,6 +26,10 @@ const pageThemes = {
     image: weed2,
     gradient: 'linear-gradient(to bottom, rgba(8,6,18,0.8) 0%, rgba(8,6,18,0.5) 50%, rgba(8,6,18,0.92) 100%)',
   },
+  connect: {
+    image: weed6,
+    gradient: 'linear-gradient(135deg, rgba(8,6,18,0.82) 0%, rgba(8,6,18,0.5) 45%, rgba(8,6,18,0.9) 100%)',
+  },
 };
 
 export default function PageHero({ theme = 'shop', children, className = '' }) {

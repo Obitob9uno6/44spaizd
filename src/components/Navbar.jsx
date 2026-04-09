@@ -167,6 +167,12 @@ export default function Navbar({ onCartOpen }) {
               <DropdownMenu label="SHOP" items={shopItems} />
               <DropdownMenu label="DROPS" items={dropsItems} />
               <Link
+                to="/connect"
+                className="text-xs font-medium tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+              >
+                CONNECT
+              </Link>
+              <Link
                 to="/vip"
                 className="text-xs font-medium tracking-wider text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -346,6 +352,13 @@ export default function Navbar({ onCartOpen }) {
               </div>
             )}
           </div>
+
+          <Link
+            to="/connect"
+            className="text-2xl font-bold tracking-widest text-foreground hover:text-primary transition-colors"
+          >
+            CONNECT
+          </Link>
 
           <Link
             to="/vip"

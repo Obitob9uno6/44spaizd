@@ -58,6 +58,7 @@ Starts both servers concurrently:
 | `/order-lookup` | Order lookup by email | — |
 | `/privacy` | Privacy policy | — |
 | `/terms` | Terms of service | — |
+| `/connect` | Connect (social links) | Dark purple frosty bud (weed6) |
 | `/shipping` | Shipping & returns | — |
 | `/admin` | Admin panel | — |
 
@@ -141,7 +142,7 @@ Starts both servers concurrently:
 
 ### Navigation
 - Dropdown menus for SHOP (Tees, Hoodies, Outerwear) and DROPS (Upcoming, Out Now)
-- Top-level links: VIP CLUB, ABOUT
+- Top-level links: CONNECT, VIP CLUB, ABOUT
 - Drop countdown banner fixed under navbar (shows when a drop is scheduled or live)
 - Cannabis leaf icon for wishlist, scissors icon for cart ("Trim Room")
 
