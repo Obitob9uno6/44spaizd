@@ -1,10 +1,38 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-const HERO_IMAGE = 'https://media.base44.com/images/public/69c24a17aa6484141262ec29/3bce5b7c6_generated_image.png';
+const DEFAULT_HERO = {
+  heading1: 'GOOD VIBES,',
+  heading2: 'BETTER FITS',
+  subheading: 'California-grown streetwear for the laid-back and deliberate. Sun-soaked fabrics, slow fashion, real culture.',
+  buttonText: 'EXPLORE COLLECTION',
+  buttonLink: '/shop',
+};
+
+const HERO_IMAGE = '/images/hero-default.jpg';
 
 export default function HeroSection() {
+  const [heroContent, setHeroContent] = useState(DEFAULT_HERO);
+
+  useEffect(() => {
+    const loadHeroContent = async () => {
+      try {
+        const res = await fetch('/api/content/hero');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data && Object.keys(data.data).length > 0) {
+            setHeroContent(data.data);
+          }
+        }
+      } catch (err) {
+        console.warn('[v0] Failed to load hero content:', err);
+      }
+    };
+    loadHeroContent();
+  }, []);
+
   return (
     <section className="relative h-screen overflow-hidden">
       <div className="absolute inset-0">
@@ -30,19 +58,19 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-none mb-4">
-            GOOD VIBES,
+            {heroContent.heading1}
             <br />
-            <span className="text-primary">BETTER FITS</span>
+            <span className="text-primary">{heroContent.heading2}</span>
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-md mb-8 leading-relaxed">
-            California-grown streetwear for the laid-back and deliberate. Sun-soaked fabrics, slow fashion, real culture.
+            {heroContent.subheading}
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              to="/shop"
+              to={heroContent.buttonLink}
               className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 text-xs font-bold tracking-widest hover:bg-primary/90 transition-colors"
             >
-              EXPLORE COLLECTION
+              {heroContent.buttonText}
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link

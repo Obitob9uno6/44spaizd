@@ -24,6 +24,8 @@ import AdminReviews from './pages/admin/AdminReviews';
 import AdminPromoCodes from './pages/admin/AdminPromoCodes';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminStoreSettings from './pages/admin/AdminStoreSettings';
+import AdminContent from './pages/admin/AdminContent';
+import AdminImages from './pages/admin/AdminImages';
 import OrderLookup from './pages/OrderLookup';
 import AccountOrders from './pages/AccountOrders';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -85,6 +87,8 @@ const AuthenticatedApp = () => {
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="promo-codes" element={<AdminPromoCodes />} />
         <Route path="users" element={<AdminUsers />} />
+        <Route path="content" element={<AdminContent />} />
+        <Route path="images" element={<AdminImages />} />
         <Route path="settings" element={<AdminStoreSettings />} />
       </Route>
     </Routes>
