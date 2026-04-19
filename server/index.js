@@ -832,10 +832,13 @@ app.post('/api/settings', adminAuthMiddleware, async (req, res) => {
 });
 
 // ── AI Customer Service Chat ─────────────────────────────
-const chatOpenai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+let chatOpenai = null;
+if (process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+  chatOpenai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+}
 
 const SPAIZD_SYSTEM_PROMPT = `You are SPAIZD's friendly customer service assistant for a California cannabis-inspired streetwear brand. Your tagline is "Good Vibes, Better Fits."
 
@@ -893,7 +896,7 @@ app.post('/api/chat', chatRateLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
-    if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+    if (!chatOpenai) {
       return res.status(503).json({ error: 'Chat service not configured' });
     }
 
