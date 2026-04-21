@@ -29,7 +29,7 @@ export default function Login() {
         </div>
 
         <div className="space-y-4">
-          <GoogleSignIn onSuccess={() => navigate('/')} />
+          <GoogleSignIn />
         </div>
 
         <p className="text-[9px] text-muted-foreground text-center mt-8 leading-relaxed">
