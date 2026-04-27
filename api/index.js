@@ -565,22 +565,19 @@ app.put('/api/settings', adminAuthMiddleware, async (req, res) => {
 // ── Admin Auth ────────────────────────────────────────────
 app.post('/api/admin/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const result = await pool.query('SELECT * FROM admins WHERE email = $1', [email]);
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    const { password } = req.body;
+    const adminPassword = process.env.ADMIN_PASSWORD || 'spaizd2024';
+    
+    if (password !== adminPassword) {
+      return res.status(401).json({ error: 'Invalid password' });
     }
-    const admin = result.rows[0];
-    // Simple password check (in production, use bcrypt)
-    if (admin.password !== password) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    
     const token = jwt.sign(
-      { adminId: admin.id, email: admin.email, isAdmin: true },
+      { isAdmin: true, loginTime: Date.now() },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
-    res.json({ token, admin: { id: admin.id, email: admin.email, name: admin.name } });
+    res.json({ token, success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
@@ -588,14 +585,8 @@ app.post('/api/admin/login', async (req, res) => {
 });
 
 app.get('/api/admin/me', adminAuthMiddleware, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT id, email, name FROM admins WHERE id = $1', [req.user.adminId]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Admin not found' });
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch admin' });
-  }
+  // Simple admin verification - just confirm they have a valid admin token
+  res.json({ isAdmin: true });
 });
 
 // ── Promo Codes ───────────────────────────────────────────

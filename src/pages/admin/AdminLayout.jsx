@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, Zap, ShoppingBag, LogOut, Menu, X, Boxes, ExternalLink, Mail, MessageSquare, Ticket, Users, Settings, Image, FileText } from 'lucide-react';
-import GoogleSignIn from '@/components/GoogleSignIn';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 export default function AdminLayout() {
   const [authed, setAuthed] = useState(false);
@@ -10,6 +11,8 @@ export default function AdminLayout() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const googleButtonRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -18,6 +21,62 @@ export default function AdminLayout() {
     if (stored === 'true') setAuthed(true);
     setLoading(false);
   }, []);
+
+  // Initialize Google Sign-In for admin
+  useEffect(() => {
+    if (authed || !GOOGLE_CLIENT_ID) return;
+
+    const loadGoogleScript = () => {
+      if (window.google?.accounts) {
+        initGoogle();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogle;
+      document.head.appendChild(script);
+    };
+
+    const initGoogle = () => {
+      if (!window.google?.accounts || !googleButtonRef.current) return;
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+        use_fedcm_for_prompt: false,
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        type: 'standard',
+        theme: 'filled_black',
+        size: 'large',
+        text: 'signin_with',
+        shape: 'rectangular',
+        width: googleButtonRef.current.offsetWidth || 320,
+      });
+    };
+
+    loadGoogleScript();
+  }, [authed]);
+
+  const handleGoogleResponse = async (response) => {
+    setGoogleLoading(true);
+    setError('');
+    try {
+      // Decode JWT to get user info (Google ID tokens are JWTs)
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      const { email, name } = payload;
+      
+      // Store admin session
+      sessionStorage.setItem('spaizd_admin', 'true');
+      sessionStorage.setItem('spaizd_admin_user', JSON.stringify({ email, name }));
+      setAuthed(true);
+    } catch (err) {
+      setError('Google sign-in failed. Please try again.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -68,14 +127,21 @@ export default function AdminLayout() {
           <p className="text-[10px] text-muted-foreground tracking-widest mt-1">ADMIN CONTROL ROOM</p>
         </div>
         <div className="space-y-4">
-          <GoogleSignIn 
-            onSuccess={(user) => {
-              sessionStorage.setItem('spaizd_admin', 'true');
-              sessionStorage.setItem('spaizd_admin_user', JSON.stringify(user));
-              setAuthed(true);
-            }}
-            buttonText="SIGN IN WITH GOOGLE"
-          />
+          {GOOGLE_CLIENT_ID ? (
+            <div className="w-full">
+              {googleLoading ? (
+                <div className="w-full border border-border py-3 text-center">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                </div>
+              ) : (
+                <div ref={googleButtonRef} className="w-full flex justify-center" />
+              )}
+            </div>
+          ) : (
+            <div className="w-full border border-dashed border-border py-3 text-center text-[10px] text-muted-foreground tracking-wider">
+              GOOGLE SIGN-IN NOT CONFIGURED
+            </div>
+          )}
           
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
