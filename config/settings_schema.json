@@ -1,0 +1,13 @@
+[
+  {
+    "name": "Theme settings",
+    "settings": [
+      { "type": "checkbox", "id": "enable_age_gate", "label": "Enable age gate", "default": true },
+      { "type": "text", "id": "age_gate_heading", "label": "Age gate heading", "default": "ARE YOU 21+?" },
+      { "type": "textarea", "id": "age_gate_text", "label": "Age gate text", "default": "SPAIZD is rooted in cannabis culture. Confirm your age to enter." },
+      { "type": "image_picker", "id": "share_image", "label": "Default social share image" },
+      { "type": "color", "id": "accent_color", "label": "Global accent color", "default": "#39FF14" },
+      { "type": "text", "id": "vip_link_label", "label": "VIP navigation label", "default": "VIP" }
+    ]
+  }
+]

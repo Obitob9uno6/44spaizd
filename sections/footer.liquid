@@ -1,0 +1,56 @@
+<footer class="site-footer">
+  <div class="footer__grid page-width">
+    <div>
+      <a class="brand" href="{{ routes.root_url }}">{{ section.settings.brand_name }}</a>
+      <p>{{ section.settings.text }}</p>
+      <div class="footer__social" aria-label="Social links">
+        {% if section.settings.instagram_url != blank %}<a href="{{ section.settings.instagram_url }}" target="_blank" rel="noopener">Instagram</a>{% endif %}
+        {% if section.settings.tiktok_url != blank %}<a href="{{ section.settings.tiktok_url }}" target="_blank" rel="noopener">TikTok</a>{% endif %}
+        {% if section.settings.x_url != blank %}<a href="{{ section.settings.x_url }}" target="_blank" rel="noopener">X</a>{% endif %}
+      </div>
+    </div>
+    <div>
+      <h2>Explore</h2>
+      <a href="/collections/all-products">Shop</a>
+      <a href="/pages/drops">Drops</a>
+      <a href="/collections/visitors">Visitors</a>
+      <a href="/collections/explorers">Explorers</a>
+      <a href="/pages/vip">VIP</a>
+      <a href="/pages/about">About</a>
+    </div>
+    <div>
+      <h2>Support</h2>
+      <a href="/pages/contact">Contact</a>
+      <a href="/pages/size-guide">Size guide</a>
+      <a href="/policies/shipping-policy">Shipping & Returns</a>
+      <a href="/policies/privacy-policy">Privacy</a>
+      <a href="/policies/terms-of-service">Terms</a>
+    </div>
+    <div>
+      <h2>Stay lit</h2>
+      {% form 'customer', class: 'newsletter-form' %}
+        <input type="hidden" name="contact[tags]" value="newsletter">
+        <input type="email" name="contact[email]" placeholder="EMAIL ADDRESS" required>
+        <button type="submit">JOIN</button>
+        {% if form.posted_successfully? %}<p class="form-success" role="status">You’re on the list.</p>{% endif %}
+        {{ form.errors | default_errors }}
+      {% endform %}
+      <noscript><p class="form-fallback">JavaScript is not required. If the form does not submit, email <a href="mailto:{{ section.settings.fallback_email }}">{{ section.settings.fallback_email }}</a>.</p></noscript>
+      <p class="form-fallback">Newsletter fallback: <a href="mailto:{{ section.settings.fallback_email }}">{{ section.settings.fallback_email }}</a></p>
+    </div>
+  </div>
+  <div class="footer__bottom page-width">© {{ 'now' | date: '%Y' }} {{ shop.name }}. All rights reserved.</div>
+</footer>
+{% schema %}
+{
+  "name": "Footer",
+  "settings": [
+    { "type": "text", "id": "brand_name", "label": "Brand name", "default": "SPAIZD" },
+    { "type": "textarea", "id": "text", "label": "Text", "default": "California-grown streetwear for the laid-back and deliberate. Sun-soaked fabrics, slow fashion, real culture." },
+    { "type": "url", "id": "instagram_url", "label": "Instagram URL" },
+    { "type": "url", "id": "tiktok_url", "label": "TikTok URL" },
+    { "type": "url", "id": "x_url", "label": "X URL" },
+    { "type": "text", "id": "fallback_email", "label": "Newsletter fallback email", "default": "hello@spaizd.com" }
+  ]
+}
+{% endschema %}

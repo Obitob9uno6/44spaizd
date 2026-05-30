@@ -1,0 +1,14 @@
+{
+  "sections": {
+    "intro": {
+      "type": "rich-text",
+      "settings": {
+        "kicker": "ABOUT SPAIZD",
+        "heading": "GOOD VIBES, BETTER FITS",
+        "text": "<p>SPAIZD is California-grown streetwear for the laid-back and deliberate. Edit this page content in Shopify after upload.</p>"
+      }
+    },
+    "main": { "type": "main-page" }
+  },
+  "order": ["intro", "main"]
+}

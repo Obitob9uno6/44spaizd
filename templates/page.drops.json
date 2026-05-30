@@ -1,0 +1,15 @@
+{
+  "sections": {
+    "intro": {
+      "type": "rich-text",
+      "settings": {
+        "kicker": "DROPS",
+        "heading": "LIMITED HARVESTS",
+        "text": "<p>Track upcoming releases, live capsules, and restocks. Connect products or collections to this page in the Theme Editor.</p>"
+      }
+    },
+    "featured": { "type": "featured-collection" },
+    "main": { "type": "main-page" }
+  },
+  "order": ["intro", "featured", "main"]
+}

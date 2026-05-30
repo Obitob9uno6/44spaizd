@@ -1,0 +1,28 @@
+<section class="page page-width">
+  <p class="eyebrow">CONNECT</p>
+  <h1>{{ section.settings.heading }}</h1>
+  <div class="rte">{{ section.settings.text }}</div>
+  {% form 'contact', class: 'contact-form' %}
+    {% if form.posted_successfully? %}
+      <p class="form-success" role="status">{{ section.settings.success_message }}</p>
+    {% endif %}
+    {% if form.errors %}
+      <div class="form-errors" role="alert">{{ form.errors | default_errors }}</div>
+    {% endif %}
+    <input type="text" name="contact[name]" value="{{ form.name }}" placeholder="NAME" autocomplete="name">
+    <input type="email" name="contact[email]" value="{{ form.email }}" placeholder="EMAIL" autocomplete="email" required>
+    <input type="tel" name="contact[phone]" value="{{ form.phone }}" placeholder="PHONE (OPTIONAL)" autocomplete="tel">
+    <textarea name="contact[body]" placeholder="MESSAGE" required>{{ form.body }}</textarea>
+    <button class="button" type="submit">SEND MESSAGE</button>
+  {% endform %}
+</section>
+{% schema %}
+{
+  "name": "Contact form",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "GET IN TOUCH" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Questions about drops, sizing, orders, or collaborations? Send a signal and we’ll respond soon.</p>" },
+    { "type": "text", "id": "success_message", "label": "Success message", "default": "Message sent. We’ll get back to you soon." }
+  ]
+}
+{% endschema %}

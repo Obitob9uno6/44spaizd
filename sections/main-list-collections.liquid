@@ -1,0 +1,4 @@
+<section class="page page-width"><h1>COLLECTIONS</h1><div class="collection-list">{% for collection in collections %}<a class="collection-tile" href="{{ collection.url }}">{% if collection.featured_image %}{{ collection.featured_image | image_url: width: 720 | image_tag: loading: 'lazy', alt: collection.title }}{% endif %}<h2>{{ collection.title }}</h2></a>{% endfor %}</div></section>
+{% schema %}
+{ "name": "List collections" }
+{% endschema %}

@@ -1,0 +1,10 @@
+{
+  "sections": {
+    "hero": { "type": "hero" },
+    "featured": { "type": "featured-collection" },
+    "about": { "type": "rich-text" },
+    "vip": { "type": "vip-promo" },
+    "newsletter": { "type": "newsletter" }
+  },
+  "order": ["hero", "featured", "about", "vip", "newsletter"]
+}

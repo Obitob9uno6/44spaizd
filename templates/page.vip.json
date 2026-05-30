@@ -1,0 +1,8 @@
+{
+  "sections": {
+    "vip": { "type": "vip-promo" },
+    "main": { "type": "main-page" },
+    "newsletter": { "type": "newsletter" }
+  },
+  "order": ["vip", "main", "newsletter"]
+}
