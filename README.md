@@ -1,6 +1,6 @@
 # SPAIZD Shopify Theme
 
-This repository is a Shopify Online Store 2.0 Liquid theme. It does **not** use React, Vite, Next.js, v0, or a JavaScript build pipeline. Shopify renders the storefront with Liquid templates, JSON templates, editable sections, snippets, CSS, and vanilla JavaScript.
+This repository is a Shopify Online Store 2.0 Liquid theme. It does **not** use React, Vite, Next.js, app-generator exports, or a JavaScript build pipeline. Shopify renders the storefront with Liquid templates, JSON templates, editable sections, snippets, CSS, and vanilla JavaScript.
 
 ## Theme structure
 
