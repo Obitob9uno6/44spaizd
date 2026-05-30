@@ -1,0 +1,23 @@
+<section class="page page-width">
+  <p class="eyebrow">FIT CHECK</p>
+  <h1>{{ section.settings.heading }}</h1>
+  <div class="rte">{{ section.settings.text }}</div>
+  <table class="size-guide-table">
+    <thead><tr><th>Size</th><th>Chest</th><th>Length</th><th>Waist</th></tr></thead>
+    <tbody>
+      <tr><td>S</td><td>34–36 in</td><td>26–27 in</td><td>28–30 in</td></tr>
+      <tr><td>M</td><td>38–40 in</td><td>27–28 in</td><td>31–33 in</td></tr>
+      <tr><td>L</td><td>42–44 in</td><td>28–29 in</td><td>34–36 in</td></tr>
+      <tr><td>XL</td><td>46–48 in</td><td>29–30 in</td><td>37–40 in</td></tr>
+    </tbody>
+  </table>
+</section>
+{% schema %}
+{
+  "name": "Size guide",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "SIZE GUIDE" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>SPAIZD pieces are cut for a relaxed streetwear fit. Measurements are approximate; check product descriptions for item-specific notes.</p>" }
+  ]
+}
+{% endschema %}

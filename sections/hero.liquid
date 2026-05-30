@@ -1,0 +1,32 @@
+<section class="hero">
+  <div class="hero__media">
+    {% if section.settings.image %}
+      {{ section.settings.image | image_url: width: 2400 | image_tag: loading: 'eager', alt: section.settings.heading }}
+    {% else %}
+      <img src="{{ 'hero-default.jpg' | asset_url }}" alt="{{ section.settings.heading | escape }}">
+    {% endif %}
+    <div class="hero__shade"></div>
+  </div>
+  <div class="smoke smoke--one"></div><div class="smoke smoke--two"></div><div class="scanner-line"></div>
+  <div class="hero__content page-width">
+    <p>{{ section.settings.kicker }}</p>
+    <h1>{{ section.settings.heading }}<span>{{ section.settings.heading_2 }}</span></h1>
+    <div class="hero__copy">{{ section.settings.text }}</div>
+    <a class="button" href="{{ section.settings.button_link }}">{{ section.settings.button_label }} →</a>
+  </div>
+</section>
+{% schema %}
+{
+  "name": "Hero",
+  "settings": [
+    { "type": "image_picker", "id": "image", "label": "Background image" },
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "NEW DROP · CALIFORNIA GROWN" },
+    { "type": "text", "id": "heading", "label": "Heading line 1", "default": "GOOD VIBES," },
+    { "type": "text", "id": "heading_2", "label": "Heading line 2", "default": "BETTER FITS" },
+    { "type": "textarea", "id": "text", "label": "Text", "default": "California-grown streetwear for the laid-back and deliberate. Sun-soaked fabrics, slow fashion, real culture." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "EXPLORE COLLECTION" },
+    { "type": "url", "id": "button_link", "label": "Button link", "default": "/collections/all-products" }
+  ],
+  "presets": [{ "name": "Hero" }]
+}
+{% endschema %}

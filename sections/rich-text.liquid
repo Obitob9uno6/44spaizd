@@ -1,0 +1,16 @@
+<section class="section rich-text page-width">
+  <p>{{ section.settings.kicker }}</p>
+  <h2>{{ section.settings.heading }}</h2>
+  <div>{{ section.settings.text }}</div>
+</section>
+{% schema %}
+{
+  "name": "Rich text",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "ABOUT SPAIZD" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "SLOW FASHION. REAL CULTURE." },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Built for laid-back days, late nights, and everyday rituals. Edit this copy in the Shopify Theme Editor.</p>" }
+  ],
+  "presets": [{ "name": "Rich text" }]
+}
+{% endschema %}

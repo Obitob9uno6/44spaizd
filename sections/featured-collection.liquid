@@ -1,0 +1,27 @@
+<section class="section page-width">
+  <div class="section__head">
+    <p>{{ section.settings.kicker }}</p>
+    <h2>{{ section.settings.heading }}</h2>
+    <a href="{{ section.settings.collection.url | default: routes.collections_url }}">VIEW ALL</a>
+  </div>
+  <div class="product-grid">
+    {% assign collection = section.settings.collection | default: collections.all %}
+    {% for product in collection.products limit: section.settings.limit %}
+      {% render 'product-card', product: product %}
+    {% else %}
+      {% for i in (1..4) %}<article class="product-card"><div class="product-card__media placeholder">{{ 'product-' | append: i | placeholder_svg_tag }}</div><div class="product-card__info"><h3>DROP PIECE {{ i }}</h3><p>$00.00</p></div></article>{% endfor %}
+    {% endfor %}
+  </div>
+</section>
+{% schema %}
+{
+  "name": "Featured collection",
+  "settings": [
+    { "type": "text", "id": "kicker", "label": "Kicker", "default": "FRESH CUTS" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "FEATURED COLLECTION" },
+    { "type": "collection", "id": "collection", "label": "Collection" },
+    { "type": "range", "id": "limit", "label": "Products", "min": 2, "max": 12, "step": 1, "default": 4 }
+  ],
+  "presets": [{ "name": "Featured collection" }]
+}
+{% endschema %}

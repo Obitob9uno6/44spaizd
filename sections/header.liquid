@@ -1,0 +1,92 @@
+{% liquid
+  assign logo_font_class = 'brand--system'
+  if section.settings.logo_font == 'mono'
+    assign logo_font_class = 'brand--mono'
+  elsif section.settings.logo_font == 'serif'
+    assign logo_font_class = 'brand--serif'
+  endif
+%}
+<header
+  class="site-header"
+  data-header
+  style="--header-bg: {{ section.settings.background_color }}; --header-border: {{ section.settings.border_color }}; --header-accent-1: {{ section.settings.accent_color_1 }}; --header-accent-2: {{ section.settings.accent_color_2 }}; --glitch-opacity: {{ section.settings.glitch_opacity }}; --nav-size: {{ section.settings.nav_font_size }}px; --nav-gap: {{ section.settings.nav_spacing }}px; --nav-color: {{ section.settings.navigation_color }}; --logo-size: {{ section.settings.logo_size }}px; --logo-spacing: {{ section.settings.letter_spacing }}px; --logo-color: {{ section.settings.logo_color }};"
+>
+  <div class="header__inner header__inner--{{ section.settings.navigation_alignment }}">
+    <a class="brand {{ logo_font_class }}" href="{{ section.settings.logo_link | default: routes.root_url }}" aria-label="{{ section.settings.brand_name | escape }} home">
+      <span>{{ section.settings.brand_name }}</span>
+    </a>
+    <button class="header__toggle" type="button" data-menu-toggle aria-expanded="false" aria-controls="PrimaryNav">MENU</button>
+    <nav id="PrimaryNav" class="header__nav" data-menu aria-label="Primary navigation">
+      <a href="{{ section.settings.shop_url }}">{{ section.settings.shop_label }}</a>
+      <a href="{{ section.settings.drops_url }}">{{ section.settings.drops_label }}</a>
+      <a href="{{ section.settings.visitors_url }}">{{ section.settings.visitors_label }}</a>
+      <a href="{{ section.settings.explorers_url }}">{{ section.settings.explorers_label }}</a>
+      <a href="{{ section.settings.vip_url }}">{{ section.settings.vip_label }}</a>
+      <a href="{{ section.settings.about_url }}">{{ section.settings.about_label }}</a>
+    </nav>
+    <div class="header__icons">
+      <a href="{{ routes.search_url }}" aria-label="Search">⌕</a>
+      <a href="{{ routes.account_url }}" aria-label="Account">◎</a>
+      <a href="{{ routes.cart_url }}" class="cart-link" data-cart-open aria-label="Cart">✂ <span data-cart-count>{{ cart.item_count }}</span></a>
+    </div>
+  </div>
+</header>
+{% render 'cart-drawer' %}
+{% if settings.enable_age_gate %}{% render 'age-gate' %}{% endif %}
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "header", "content": "Brand" },
+    { "type": "text", "id": "brand_name", "label": "Brand name", "default": "SPAIZD" },
+    { "type": "url", "id": "logo_link", "label": "Logo link", "default": "/" },
+    {
+      "type": "select",
+      "id": "logo_font",
+      "label": "Logo font",
+      "default": "system_ui",
+      "options": [
+        { "value": "system_ui", "label": "system_ui" },
+        { "value": "mono", "label": "Mono" },
+        { "value": "serif", "label": "Serif" }
+      ]
+    },
+    { "type": "range", "id": "logo_size", "label": "Logo size", "min": 18, "max": 64, "step": 1, "default": 32 },
+    { "type": "range", "id": "letter_spacing", "label": "Letter spacing", "min": 0, "max": 12, "step": 1, "default": 4 },
+    { "type": "color", "id": "logo_color", "label": "Logo color", "default": "#FFFFFF" },
+    { "type": "header", "content": "Navigation" },
+    { "type": "text", "id": "shop_label", "label": "Shop label", "default": "Shop" },
+    { "type": "url", "id": "shop_url", "label": "Shop link", "default": "/collections/all-products" },
+    { "type": "text", "id": "drops_label", "label": "Drops label", "default": "Drops" },
+    { "type": "url", "id": "drops_url", "label": "Drops link", "default": "/pages/drops" },
+    { "type": "text", "id": "visitors_label", "label": "Visitors label", "default": "Visitors" },
+    { "type": "url", "id": "visitors_url", "label": "Visitors link", "default": "/collections/visitors" },
+    { "type": "text", "id": "explorers_label", "label": "Explorers label", "default": "Explorers" },
+    { "type": "url", "id": "explorers_url", "label": "Explorers link", "default": "/collections/explorers" },
+    { "type": "text", "id": "vip_label", "label": "VIP label", "default": "VIP" },
+    { "type": "url", "id": "vip_url", "label": "VIP link", "default": "/pages/vip" },
+    { "type": "text", "id": "about_label", "label": "About label", "default": "About" },
+    { "type": "url", "id": "about_url", "label": "About link", "default": "/pages/about" },
+    {
+      "type": "select",
+      "id": "navigation_alignment",
+      "label": "Navigation alignment",
+      "default": "right",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    { "type": "range", "id": "nav_font_size", "label": "Navigation font size", "min": 10, "max": 22, "step": 1, "default": 14 },
+    { "type": "range", "id": "nav_spacing", "label": "Navigation spacing", "min": 10, "max": 60, "step": 1, "default": 30 },
+    { "type": "color", "id": "navigation_color", "label": "Navigation color", "default": "#C5D9C2" },
+    { "type": "header", "content": "Colors and effects" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#0A0A0F" },
+    { "type": "color", "id": "border_color", "label": "Border", "default": "#2A2440" },
+    { "type": "color", "id": "accent_color_1", "label": "Accent color 1", "default": "#7B2FBE" },
+    { "type": "color", "id": "accent_color_2", "label": "Accent color 2", "default": "#39FF14" },
+    { "type": "range", "id": "glitch_opacity", "label": "Glitch effect opacity", "min": 0, "max": 1, "step": 0.1, "default": 0.3 }
+  ]
+}
+{% endschema %}

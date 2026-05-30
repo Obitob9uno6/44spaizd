@@ -1,0 +1,16 @@
+<article class="product-card">
+  <a href="{{ product.url }}" class="product-card__media">
+    {% if product.featured_image %}
+      {% assign image_alt = product.featured_image.alt | default: product.title %}
+      {{ product.featured_image | image_url: width: 720 | image_tag: loading: 'lazy', alt: image_alt }}
+    {% else %}
+      <div class="placeholder">{{ 'product-1' | placeholder_svg_tag }}</div>
+    {% endif %}
+    {% unless product.available %}<span class="badge badge--muted">SOLD OUT</span>{% endunless %}
+    {% if product.compare_at_price > product.price and product.available %}<span class="badge">LIMITED</span>{% endif %}
+  </a>
+  <div class="product-card__info">
+    <a href="{{ product.url }}"><h3>{{ product.title }}</h3></a>
+    <p>{{ product.price | money }}{% if product.compare_at_price > product.price %} <s>{{ product.compare_at_price | money }}</s>{% endif %}</p>
+  </div>
+</article>

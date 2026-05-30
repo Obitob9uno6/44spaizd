@@ -1,0 +1,27 @@
+<section class="cart-page page-width">
+  <h1>TRIM ROOM</h1>
+  {% if cart.item_count == 0 %}
+    <div class="cart-empty"><h2>YOUR TRIM ROOM IS EMPTY</h2><p>Your cart is ready for the next harvest.</p><a class="button" href="/collections/all-products">EXPLORE COLLECTION</a></div>
+  {% else %}
+    <form action="{{ routes.cart_url }}" method="post" novalidate>
+      {% for item in cart.items %}
+        <div class="cart-line">
+          {% if item.image %}<img src="{{ item.image | image_url: width: 180 }}" alt="{{ item.image.alt | escape }}">{% endif %}
+          <div><h2>{{ item.product.title }}</h2><p>{{ item.variant.title }}</p><a href="{{ item.url_to_remove }}">Remove</a></div>
+          <label class="visually-hidden" for="CartQuantity-{{ forloop.index }}">Quantity for {{ item.product.title }}</label>
+          <input id="CartQuantity-{{ forloop.index }}" type="number" name="updates[]" value="{{ item.quantity }}" min="0">
+          <strong>{{ item.final_line_price | money }}</strong>
+        </div>
+      {% endfor %}
+      <div class="cart-summary">
+        <p>Subtotal: <strong>{{ cart.total_price | money }}</strong></p>
+        <p class="cart-summary__note">Taxes, shipping, and discounts are calculated at checkout.</p>
+        <button class="button" type="submit" name="update">UPDATE</button>
+        <button class="button button--secondary" type="submit" name="checkout">CHECKOUT</button>
+      </div>
+    </form>
+  {% endif %}
+</section>
+{% schema %}
+{ "name": "Main cart" }
+{% endschema %}

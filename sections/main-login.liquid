@@ -1,0 +1,4 @@
+<section class="page page-width"><h1>LOGIN</h1>{% form 'customer_login', class: 'customer-form' %}{{ form.errors | default_errors }}<input type="email" name="customer[email]" placeholder="EMAIL" required><input type="password" name="customer[password]" placeholder="PASSWORD" required><button class="button" type="submit">SIGN IN</button>{% endform %}</section>
+{% schema %}
+{ "name": "Login" }
+{% endschema %}

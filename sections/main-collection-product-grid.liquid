@@ -1,0 +1,27 @@
+<section class="collection-page page-width">
+  <header class="collection-hero">
+    <p>SHOP</p>
+    <h1>{{ collection.title | default: 'ALL PRODUCTS' }}</h1>
+    {% if collection.description != blank %}<div>{{ collection.description }}</div>{% endif %}
+  </header>
+  {% paginate collection.products by section.settings.products_per_page %}
+    <div class="collection-toolbar">
+      <span>{{ paginate.items }} PIECES</span>
+      <div class="sort-note">Sort and filters are managed by Shopify collection settings.</div>
+    </div>
+    <div class="product-grid">
+      {% for product in collection.products %}{% render 'product-card', product: product %}{% else %}<p>No products found.</p>{% endfor %}
+    </div>
+    {% if paginate.pages > 1 %}
+      <nav class="pagination">{{ paginate | default_pagination }}</nav>
+    {% endif %}
+  {% endpaginate %}
+</section>
+{% schema %}
+{
+  "name": "Collection grid",
+  "settings": [
+    { "type": "range", "id": "products_per_page", "label": "Products per page", "min": 8, "max": 48, "step": 4, "default": 16 }
+  ]
+}
+{% endschema %}

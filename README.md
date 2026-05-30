@@ -1,83 +1,86 @@
-**Welcome to your Base44/spaizd project** 
-...
-**About**
-Here is a full list of the current features of the site based on the current codebase:
+# SPAIZD Shopify Theme
 
-Frontend/User-Facing Features:
+This repository is a Shopify Online Store 2.0 Liquid theme. It does **not** use React, Vite, Next.js, app-generator exports, or a JavaScript build pipeline. Shopify renders the storefront with Liquid templates, JSON templates, editable sections, snippets, CSS, and vanilla JavaScript.
 
-Product Catalog: Users can browse products by categories (Tees, Hoodies, Outerwear, Pants, Headwear, Accessories) and sort them by Newest, Price: Low → High, and Price: High → Low.
-Product Detail Pages (PDP): Detailed product views with multiple images, descriptions, materials, weight, origin, stock status, and size selection.
-Shopping Cart ("Trim Room"):
-Add/remove items from the cart.
-Update item quantities.
-Displays subtotal, shipping costs (free shipping over $150), and total.
-Persistent cart across sessions (using local storage).
-Checkout Process:
-Collects shipping information (name, email, address, city, state, zip, country).
-Order creation upon submission.
-Order Confirmation Page: Displays a confirmation message after a successful order.
-VIP Club Promotion:
-Dedicated VIP page highlighting benefits (early access, exclusive drops, member pricing).
-Newsletter signup for VIP waitlist.
-Newsletter Subscription: Email signup form for general updates.
-Dynamic Hero Section: Homepage banner with a countdown to the next drop and call-to-action buttons.
-Featured Collection: Displays a curated selection of featured products on the homepage.
-Responsive Design: Optimized for both mobile and desktop viewing.
-Styling & UX:
-"Trap-lux" cannabis-coded streetwear aesthetic.
-Deep violet and neon purple color system with nebula-inspired accents.
-Subtle ambient smoke wisps and scanner line animation.
-framer-motion for subtle micro-interactions and transitions (e.g., hover effects, card animations).
-Custom scrollbar styling.
-"Scissors snip" animation on cart interaction.
-Backend/Admin Features (Admin Panel):
+## Theme structure
 
-Admin Login: Access restricted to users with role: admin.
-Admin Layout: Dedicated navigation for admin sections.
-Overview Dashboard: Provides statistics such as total products, orders, revenue, active drops, and recent orders.
-Product Management (CRUD): Full functionality to add, edit, and delete products, including:
-Product Name, URL Slug, Price, Compare At Price.
-Category, Description, Materials, Weight, Origin.
-Available Sizes, Product Images.
-Stock Quantity, Badge (NEW, LIMITED, SOLD OUT, POPULAR), Featured status, Active status, SKU.
-Drops Manager: Tool to quickly update product badges (NEW, LIMITED, SOLD OUT) and featured status.
-Order Management: View all customer orders, including detailed item lists and shipping addresses.
-Order Status Updates: Ability to change the status of orders (e.g., pending, confirmed, shipped, delivered, cancelled).
+The uploadable theme uses Shopify's standard directory structure:
 
-*This covers both the user-facing and administrative functionalities currently implemented.*
+- `assets/` — CSS, JavaScript, favicon, and bundled image assets.
+- `config/` — Theme Editor global settings.
+- `layout/` — the global `theme.liquid` shell.
+- `locales/` — translation strings.
+- `sections/` — Online Store 2.0 sections and section groups.
+- `snippets/` — reusable Liquid snippets.
+- `templates/` — JSON templates for home, product, collection, cart, pages, search, policy, and 404.
+- `templates/customers/` — customer account/login templates.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+## Local checks
 
-This project contains everything you need to run your app locally.
-
-**Edit the code in your local development environment**
-
-Any change pushed to the repo will also be reflected in the Base44 Builder.
-
-**Prerequisites:** 
-
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
-
-```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
-
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
+```bash
+npm run check
 ```
 
-Run the app: `npm run dev`
+The check script validates required Shopify directories, JSON syntax, JSON template section references, Liquid schema JSON, and Theme Editor presets for reusable sections.
 
-**Publish your changes**
+## Build an uploadable zip
 
-Open [Base44.com](http://Base44.com) and click on Publish.
+```bash
+npm run zip
+```
 
-**Docs & Support**
+This creates `dist/spaizd-shopify-theme.zip` containing only Shopify theme directories.
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
+## Manual Shopify setup after upload
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+1. In Shopify Admin, go to **Online Store → Themes → Add theme → Upload zip file**.
+2. Upload `dist/spaizd-shopify-theme.zip`.
+3. Open **Customize** on the uploaded theme.
+4. In the **Header** section, verify these defaults are present:
+   - Brand name: `SPAIZD`
+   - Logo link: `/`
+   - Logo font: `system_ui`
+   - Logo size: `32`
+   - Letter spacing: `4`
+   - Logo color: `#FFFFFF`
+   - Navigation: Shop `/collections/all-products`, Drops `/pages/drops`, Visitors `/collections/visitors`, Explorers `/collections/explorers`, VIP `/pages/vip`, About `/pages/about`
+   - Navigation alignment: `Right`
+   - Navigation font size: `14`
+   - Navigation spacing: `30`
+   - Navigation color: `#C5D9C2`
+   - Background: `#0A0A0F`
+   - Border: `#2A2440`
+   - Accent color 1: `#7B2FBE`
+   - Accent color 2: `#39FF14`
+   - Glitch effect opacity: `0.3`
+5. Create or verify Shopify pages with these handles and assign the matching templates:
+   - `about` → `page.about`
+   - `drops` → `page.drops`
+   - `vip` → `page.vip`
+   - `contact` → `page.contact`
+   - `size-guide` → `page.size-guide`
+6. Create or verify collections with these handles:
+   - `all-products`
+   - `visitors`
+   - `explorers`
+7. Add products with variants and inventory, then assign products to the relevant collections.
+8. Configure Shopify policies under **Settings → Policies**; the theme includes policy styling.
+9. Configure social links and newsletter fallback email in the **Footer** section.
+10. QA before publishing:
+    - Product page loads and variants switch.
+    - Add-to-cart opens the cart drawer.
+    - Cart drawer quantity/remove controls update the cart.
+    - Cart page update/remove works.
+    - Checkout buttons route to Shopify checkout.
+    - Mobile menu opens/closes and links navigate.
+    - No horizontal scrolling on mobile.
+
+## Shopify CLI workflow
+
+If Shopify CLI is installed and authenticated:
+
+```bash
+shopify theme check
+shopify theme dev --store your-store.myshopify.com
+shopify theme push --unpublished --store your-store.myshopify.com
+```
